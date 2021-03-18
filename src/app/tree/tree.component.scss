@@ -8,3 +8,14 @@ circle {
   display: block;
   z-index: 1000;
 }
+
+figure ::ng-deep svg path.link {
+  fill: none;
+  stroke-width: 2;
+}
+
+figure ::ng-deep .node path {
+  stroke: black;
+  stroke-width: 3;
+  fill: white;
+}

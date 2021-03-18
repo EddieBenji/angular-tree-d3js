@@ -14,7 +14,7 @@ export class TreeComponent implements OnInit {
         left: 30,
         right: 100
     };
-    height = 600;
+    height = 900;
     width = 900;
 
     totalWidth = this.width + this.margins.left + this.margins.right;
@@ -299,238 +299,234 @@ export class TreeComponent implements OnInit {
           .attr('width', this.totalWidth)
           .attr('height', this.totalHeight);
 
-        this.svg.append('g')
+        const graphGroup = this.svg.append('g')
           .attr('transform', 'translate(' + this.margins.left + ',' + this.margins.top + ')');
 
-        // precompute level depth
+        this.levels.unshift([]);
+
+// We add one pseudo node to every level to deal with parentless nodes
         this.levels.forEach((l, i) => {
-            l.forEach(n => n.level = i);
-        });
-
-        // Declare the general properties the D3 needs.
-        const nodes = this.levels.reduce(((a, x) => a.concat(x)), []);
-        // tslint:disable-next-line:variable-name
-        const nodes_index = {};
-        nodes.forEach((d: any) => nodes_index[ d.id ] = d);
-
-        // objectification
-        nodes.forEach((d: any) => {
-            d.parents = (d.parents === undefined ? [] : d.parents).map(p => nodes_index[ p ]);
-        });
-
-        // precompute bundles
-        this.levels.forEach((l, i) => {
-            const index = {};
-            l.forEach((n: any) => {
-                if (n.parents.length === 0) {
-                    return;
-                }
-
-                const id = n.parents.map((d: any) => d.id).sort().join('--');
-                if (id in index) {
-                    index[ id ].parents = index[ id ].parents.concat(n.parents);
+            l.forEach((n, j) => {
+                n.level = i;
+                if (n.parents !== undefined) {
+                    n.parent = n.parents[ 0 ];
                 } else {
-                    index[ id ] = {
-                        id,
-                        parents: n.parents.slice(),
-                        level: i
-                    };
+                    n.parent = `pseudo-${i - 1}`;
                 }
-                n.bundle = index[ id ];
             });
-            l.bundles = Object.keys(index).map(k => index[ k ]);
-            l.bundles.forEach((b, counter) => b.i = counter);
+            l.unshift({
+                id: `pseudo-${i}`,
+                parent: i > 0 ? `pseudo-${i - 1}` : '',
+                level: i
+            });
         });
 
-        const links: any[] = [];
-        nodes.forEach((d: any) => {
-            d.parents.forEach(p => links.push({
-                source: d,
-                bundle: d.bundle,
-                target: p
-            }));
-        });
+        const nodes = this.flatSingle(this.levels);
+        const colours = d3.scaleOrdinal()
+          .domain(nodes.filter(n => n.parents)
+            .map(n => n.parents.sort()
+              .join('-')))
+          .range(d3.schemePaired);
+        const that = this;
 
-        const bundles = this.levels.reduce(((a, x) => a.concat(x.bundles)), []);
+        function getLinks(otherLinks): any[] {
+            return that.flatSingle(
+              otherLinks
+                .filter(n => n.data.parents !== undefined)
+                .map(n => n.data.parents.map(p => ({
+                    source: otherLinks.find(deepN => deepN.id === p),
+                    target: n
+                })))
+            );
+        }
 
-        // reverse pointer from parent to bundles
-        bundles.forEach((b: any) => b.parents.forEach(p => {
-            if (p.bundles_index === undefined) {
-                p.bundles_index = {};
+        const offsetPerPartner = 3;
+        const drawNodePath = (d: any) => {
+            const radius = 5;
+            // The number of partners determines the node height
+            // But when a node has only one partner,
+            // treat it the same as when it has zero
+            const nPartners = (d.data.partners && d.data.partners.length > 1)
+              ? d.data.partners.length
+              : 0;
+
+            // We want to centre each node
+            const straightLineOffset = (nPartners * offsetPerPartner) / 2;
+
+            const context = d3.path();
+            context.moveTo(- radius, 0);
+            context.lineTo(- radius, - straightLineOffset);
+            context.arc(0, - straightLineOffset, radius, - Math.PI, 0);
+            context.lineTo(radius, straightLineOffset);
+            context.arc(0, straightLineOffset, radius, 0, Math.PI);
+            context.closePath();
+
+            return context + '';
+        };
+
+        const drawLinkCurve = (x0, y0, x1, y1, offset, radius) => {
+            const context = d3.path();
+            context.moveTo(x0, y0);
+            context.lineTo(x1 - 2 * radius - offset, y0);
+
+            // If there is not enough space to draw two corners, reduce the corner radius
+            if (Math.abs(y0 - y1) < 2 * radius) {
+                radius = Math.abs(y0 - y1) / 2;
             }
-            if (!(b.id in p.bundles_index)) {
-                p.bundles_index[ b.id ] = [];
-            }
-            p.bundles_index[ b.id ].push(b);
-        }));
 
-        nodes.forEach((n: any) => {
-            if (n.bundles_index !== undefined) {
-                n.bundles = Object.keys(n.bundles_index).map(k => n.bundles_index[ k ]);
+            if (y0 < y1) {
+                context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 + radius, radius);
+                context.lineTo(x1 - offset - radius, y1 - radius);
+                context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
+            } else if (y0 > y1) {
+                context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 - radius, radius);
+                context.lineTo(x1 - offset - radius, y1 + radius);
+                context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
+            }
+            context.lineTo(x1, y1);
+            return context + '';
+        };
+
+        const partnershipsPerLevel = {};
+        const getPartnershipOffset = (parent, partner) => {
+            let partnershipId;
+            let level;
+            if (partner !== undefined) {
+                // On every level, every relationship gets its own offset. If a relationship
+                // spans multiple levels, the furthest level is chosen
+                level = Math.max(parent.depth, partner.level);
+                if (!partnershipsPerLevel[ level ]) {
+                    partnershipsPerLevel[ level ] = [];
+                }
+                partnershipId = [ parent.id, partner.id ].sort().join('-');
             } else {
-                n.bundles_index = {};
-                n.bundles = [];
+                level = parent.depth;
+                if (!partnershipsPerLevel[ level ]) {
+                    partnershipsPerLevel[ level ] = [];
+                }
+                partnershipId = parent.id;
             }
-            n.bundles.forEach((b, i) => b.i = i);
-        });
 
-        links.forEach((l: any) => {
-            if (l.bundle.links === undefined) {
-                l.bundle.links = [];
+            // Assume that the partnership already has a slot assigned
+            const partnershipOffset = partnershipsPerLevel[ level ].indexOf(partnershipId);
+            if (partnershipOffset === - 1) {
+                // Apparently not
+                return partnershipsPerLevel[ level ].push(partnershipId) - 1;
             }
-            l.bundle.links.push(l);
-        });
+            return partnershipOffset;
+        };
 
-        // layout
-        const padding = 8;
-        // tslint:disable-next-line:variable-name
-        const node_height = 22;
-        // tslint:disable-next-line:variable-name
-        const node_width = 70;
-        // tslint:disable-next-line:variable-name
-        const bundle_width = 14;
-        // tslint:disable-next-line:variable-name
-        const level_y_padding = 16;
-        // tslint:disable-next-line:variable-name
-        const metro_d = 4;
-        const c = 16;
-        // tslint:disable-next-line:variable-name
-        const min_family_height = 16;
+        const lineRadius = 10;
+        const offsetStep = 5;
+        const linkFn = (link: any) => {
+            const thisParent = link.source;
+            const partnerId = link.target.data.parents.find(p => p !== thisParent.id);
+            const partners = thisParent.data.partners || [];
 
-        nodes.forEach((n: any) => n.height = (Math.max(1, n.bundles.length) - 1) * metro_d);
+            // Let the first link start with this negative offset
+            // But when a node has only one partner,
+            // treat it the same as when it has zero
+            const startOffset = (partners.length > 1)
+              ? - (partners.length * offsetPerPartner) / 2
+              : 0;
 
-        // tslint:disable-next-line:variable-name
-        let x_offset = padding;
-        // tslint:disable-next-line:variable-name
-        let y_offset = padding;
-        this.levels.forEach((l: any) => {
-            x_offset += l.bundles.length * bundle_width;
-            y_offset += level_y_padding;
-            l.forEach((n, i) => {
-                n.x = n.level * node_width + x_offset;
-                n.y = node_height + y_offset + n.height / 2;
+            const partner = partners.find(p => p.id === partnerId);
 
-                y_offset += node_height + n.height;
-            });
-        });
+            // Chaos has no partner, nor Zeus with Athena
+            const nthPartner = partner !== undefined
+              ? partners.indexOf(partner)
+              : (partners || []).length;
+            const partnershipOffset = getPartnershipOffset(thisParent, partner);
 
-        let i = 0;
-        this.levels.forEach((l: any) => {
-            l.bundles.forEach(b => {
-                b.x = b.parents[ 0 ].x + node_width + (l.bundles.length - 1 - b.i) * bundle_width;
-                b.y = i * node_height;
-            });
-            i += l.length;
-        });
+            return drawLinkCurve(
+              thisParent.y,
+              thisParent.x + startOffset + offsetPerPartner * nthPartner,
+              link.target.y,
+              link.target.x,
+              offsetStep * partnershipOffset,
+              lineRadius
+            );
+        };
 
-        links.forEach(l => {
-            l.xt = l.target.x;
-            l.yt = l.target.y + l.target.bundles_index[ l.bundle.id ].i * metro_d - l.target.bundles.length * metro_d / 2 + metro_d / 2;
-            l.xb = l.bundle.x;
-            l.xs = l.source.x;
-            l.ys = l.source.y;
-        });
+        function draw(otherRoot): void {
+            // Now every node has had it's position set, we can draw them now
+            const newNodes = otherRoot.descendants()
+              .filter(n => !n.id.startsWith('pseudo-'));
+            const links = getLinks(newNodes)
+              .filter(l => !l.source.id.startsWith('pseudo-'));
 
-        // compress vertical space
-        // tslint:disable-next-line:variable-name
-        let y_negative_offset = 0;
-        this.levels.forEach((l: any) => {
-            // tslint:disable-next-line:max-line-length
-            const accessor = (link: any) => {
-                return (link.ys - c) - (link.yt + c);
-            };
-            y_negative_offset += - min_family_height + d3.min(l.bundles, (b: any) => d3.min(b.links, accessor)) || 0;
-            l.forEach((n: any) => n.y -= y_negative_offset);
-        });
-
-        // very ugly, I know
-        links.forEach((l: any) => {
-            l.yt = l.target.y + l.target.bundles_index[ l.bundle.id ].i * metro_d - l.target.bundles.length * metro_d / 2 + metro_d / 2;
-            l.ys = l.source.y;
-            l.c1 = l.source.level - l.target.level > 1 ? node_width + c : c;
-            l.c2 = c;
-        });
-
-        const cluster = d3.cluster()
-          .size([ this.width, this.height ]);
-
-        const root = d3.hierarchy(links);
-        cluster(root);
-        const oValues: any = Object.values(root as any)[ 0 ];
-        const linkks: any = oValues.map((x: any) => x.bundle.links);
-
-        linkks.forEach((linkk: any) => {
-            this.svg.append('g')
-              .selectAll('circle')
-              .data(linkk)
-              .join('circle')
-              .attr('cx', (d: any) => d.target.x)
-              .attr('cy', (d: any) => d.target.y)
-              .attr('fill', 'none')
-              .attr('stroke', (d: any) => {
-                  return '#' + Math.floor(16777215 * Math.sin(3 * Math.PI / (5 * (parseInt(d.target.level, 10) + 1)))).toString(16);
-              })
-              .attr('r', 6);
-            this.svg.append('g')
-              .selectAll('circle')
-              .data(linkk)
-              .join('circle')
-              .attr('cx', (d: any) => d.source.x)
-              .attr('cy', (d: any) => d.source.y)
-              .attr('fill', 'none')
-              .attr('stroke', (d: any) => {
-                  return '#' + Math.floor(16777215 * Math.sin(3 * Math.PI / (5 * (parseInt(d.source.level, 10) + 1)))).toString(16);
-              })
-              .attr('r', 6);
-
-            this.svg.append('g')
-              .attr('font-family', 'sans-serif')
-              .attr('font-size', 14)
-              .selectAll('text')
-              .data(linkk)
-              .join('text')
-              .attr('class', 'text')
-              .attr('x', (d: any) => d.target.x + padding)
-              .attr('y', (d: any) => d.target.y)
-              .text((d: any) => d.target.id)
-              .attr('fill', (d: any) => {
-                  return '#' + Math.floor(16777215 * Math.sin(3 * Math.PI / (5 * (parseInt(d.target.level, 10) + 2)))).toString(16);
-              });
-
-            this.svg.append('g')
-              .attr('font-family', 'sans-serif')
-              .attr('font-size', 14)
-              .selectAll('text')
-              .data(linkk)
-              .join('text')
-              .attr('class', 'text')
-              .attr('x', (d: any) => d.source.x + padding)
-              .attr('y', (d: any) => d.source.y)
-              .text((d: any) => d.source.id)
-              .attr('fill', (d: any) => {
-                  return '#' + Math.floor(16777215 * Math.sin(3 * Math.PI / (5 * (parseInt(d.source.level, 10) + 1)))).toString(16);
-              });
-
-            this.svg.append('g')
-              .attr('class', 'node')
-              .selectAll('path')
-              .data(linkk)
-              .join('path')
+            const link = graphGroup.selectAll('.link')
+              .data(links);
+            link.exit().remove();
+            link.enter()
+              .append('path')
               .attr('class', 'link')
-              .attr('d', d3.linkHorizontal()
-                .source((d: any) => {
-                    return [ d.xs, d.ys ];
-                })
-                .target((d: any) => {
-                    return [ d.xt, d.yt ];
-                }))
-              .attr('fill', 'none')
-              .attr('stroke-opacity', 0.325)
-              .attr('stroke-width', 0.75)
-              .attr('stroke', (d: any) => {
-                  return '#' + Math.floor(16777215 * Math.sin(3 * Math.PI / (4 * parseInt(d.source.level, 10)))).toString(16);
-              });
-        });
+              .merge(link)
+              .attr('stroke', d => colours(d.target.data.parents.sort().join('-')))
+              .attr('d', linkFn);
+
+            const node = graphGroup.selectAll('.node')
+              .data(newNodes);
+            node.exit().remove();
+            const newNode = node.enter()
+              .append('g')
+              .attr('class', 'node');
+
+            newNode.append('path')
+              .attr('d', drawNodePath);
+            newNode.append('text')
+              .attr('dy', - 3)
+              .attr('x', 6);
+
+            newNode.merge(node)
+              .attr('transform', d => `translate(${d.y},${d.x})`)
+              .selectAll('text')
+              .text(d => d.id);
+        }
+
+        const root = d3.stratify()
+          .parentId((d: any) => d.parent)
+          (nodes);
+
+        // Map the different sets of parents,
+        // assigning each parent an array of partners
+        getLinks(root.descendants())
+          .filter(l => l.target.data.parents)
+          .forEach(l => {
+              const parentNames = l.target.data.parents;
+              if (parentNames.length > 1) {
+                  const parentNodes = parentNames.map(p => nodes.find(n => n.id === p));
+
+                  parentNodes.forEach(p => {
+                      if (!p.partners) {
+                          p.partners = [];
+                      }
+                      parentNodes
+                        .filter(n => n !== p && !p.partners.includes(n))
+                        .forEach(n => {
+                            p.partners.push(n);
+                        });
+                  });
+              }
+          });
+
+        // Take nodes with more partners first,
+// also counting the partners of the children
+        root
+          .sum((d: any) => (d.value || 0) + (d.partners || []).length)
+          .sort((a: any, b: any) => b.value - a.value);
+
+        const tree = d3.tree()
+          .size([ this.height, this.width ])
+          .separation((a: any, b: any) => {
+              // More separation between nodes with many children
+              const totalPartners = (a.data.partners || []).length + (b.data.partners || []).length;
+              return 1 + (totalPartners / 5);
+          });
+
+        draw(tree(root));
 
     }
+
+    flatSingle = arr => [].concat(...arr);
 }
