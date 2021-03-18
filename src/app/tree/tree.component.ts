@@ -285,6 +285,12 @@ export class TreeComponent implements OnInit {
         ]
     ];
     svg: any;
+    graphGroup: any;
+    colours: any;
+    offsetPerPartner = 3;
+    partnershipsPerLevel = {};
+    lineRadius = 10;
+    offsetStep = 5;
 
     constructor() {
     }
@@ -299,12 +305,12 @@ export class TreeComponent implements OnInit {
           .attr('width', this.totalWidth)
           .attr('height', this.totalHeight);
 
-        const graphGroup = this.svg.append('g')
+        this.graphGroup = this.svg.append('g')
           .attr('transform', 'translate(' + this.margins.left + ',' + this.margins.top + ')');
 
         this.levels.unshift([]);
 
-// We add one pseudo node to every level to deal with parentless nodes
+        // We add one pseudo node to every level to deal with parentless nodes
         this.levels.forEach((l, i) => {
             l.forEach((n, j) => {
                 n.level = i;
@@ -322,167 +328,11 @@ export class TreeComponent implements OnInit {
         });
 
         const nodes = this.flatSingle(this.levels);
-        const colours = d3.scaleOrdinal()
+        this.colours = d3.scaleOrdinal()
           .domain(nodes.filter(n => n.parents)
             .map(n => n.parents.sort()
               .join('-')))
           .range(d3.schemePaired);
-        const that = this;
-
-        function getLinks(otherLinks): any[] {
-            return that.flatSingle(
-              otherLinks
-                .filter(n => n.data.parents !== undefined)
-                .map(n => n.data.parents.map(p => ({
-                    source: otherLinks.find(deepN => deepN.id === p),
-                    target: n
-                })))
-            );
-        }
-
-        const offsetPerPartner = 3;
-        const drawNodePath = (d: any) => {
-            const radius = 5;
-            // The number of partners determines the node height
-            // But when a node has only one partner,
-            // treat it the same as when it has zero
-            const nPartners = (d.data.partners && d.data.partners.length > 1)
-              ? d.data.partners.length
-              : 0;
-
-            // We want to centre each node
-            const straightLineOffset = (nPartners * offsetPerPartner) / 2;
-
-            const context = d3.path();
-            context.moveTo(- radius, 0);
-            context.lineTo(- radius, - straightLineOffset);
-            context.arc(0, - straightLineOffset, radius, - Math.PI, 0);
-            context.lineTo(radius, straightLineOffset);
-            context.arc(0, straightLineOffset, radius, 0, Math.PI);
-            context.closePath();
-
-            return context + '';
-        };
-
-        const drawLinkCurve = (x0, y0, x1, y1, offset, radius) => {
-            const context = d3.path();
-            context.moveTo(x0, y0);
-            context.lineTo(x1 - 2 * radius - offset, y0);
-
-            // If there is not enough space to draw two corners, reduce the corner radius
-            if (Math.abs(y0 - y1) < 2 * radius) {
-                radius = Math.abs(y0 - y1) / 2;
-            }
-
-            if (y0 < y1) {
-                context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 + radius, radius);
-                context.lineTo(x1 - offset - radius, y1 - radius);
-                context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
-            } else if (y0 > y1) {
-                context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 - radius, radius);
-                context.lineTo(x1 - offset - radius, y1 + radius);
-                context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
-            }
-            context.lineTo(x1, y1);
-            return context + '';
-        };
-
-        const partnershipsPerLevel = {};
-        const getPartnershipOffset = (parent, partner) => {
-            let partnershipId;
-            let level;
-            if (partner !== undefined) {
-                // On every level, every relationship gets its own offset. If a relationship
-                // spans multiple levels, the furthest level is chosen
-                level = Math.max(parent.depth, partner.level);
-                if (!partnershipsPerLevel[ level ]) {
-                    partnershipsPerLevel[ level ] = [];
-                }
-                partnershipId = [ parent.id, partner.id ].sort().join('-');
-            } else {
-                level = parent.depth;
-                if (!partnershipsPerLevel[ level ]) {
-                    partnershipsPerLevel[ level ] = [];
-                }
-                partnershipId = parent.id;
-            }
-
-            // Assume that the partnership already has a slot assigned
-            const partnershipOffset = partnershipsPerLevel[ level ].indexOf(partnershipId);
-            if (partnershipOffset === - 1) {
-                // Apparently not
-                return partnershipsPerLevel[ level ].push(partnershipId) - 1;
-            }
-            return partnershipOffset;
-        };
-
-        const lineRadius = 10;
-        const offsetStep = 5;
-        const linkFn = (link: any) => {
-            const thisParent = link.source;
-            const partnerId = link.target.data.parents.find(p => p !== thisParent.id);
-            const partners = thisParent.data.partners || [];
-
-            // Let the first link start with this negative offset
-            // But when a node has only one partner,
-            // treat it the same as when it has zero
-            const startOffset = (partners.length > 1)
-              ? - (partners.length * offsetPerPartner) / 2
-              : 0;
-
-            const partner = partners.find(p => p.id === partnerId);
-
-            // Chaos has no partner, nor Zeus with Athena
-            const nthPartner = partner !== undefined
-              ? partners.indexOf(partner)
-              : (partners || []).length;
-            const partnershipOffset = getPartnershipOffset(thisParent, partner);
-
-            return drawLinkCurve(
-              thisParent.y,
-              thisParent.x + startOffset + offsetPerPartner * nthPartner,
-              link.target.y,
-              link.target.x,
-              offsetStep * partnershipOffset,
-              lineRadius
-            );
-        };
-
-        function draw(otherRoot): void {
-            // Now every node has had it's position set, we can draw them now
-            const newNodes = otherRoot.descendants()
-              .filter(n => !n.id.startsWith('pseudo-'));
-            const links = getLinks(newNodes)
-              .filter(l => !l.source.id.startsWith('pseudo-'));
-
-            const link = graphGroup.selectAll('.link')
-              .data(links);
-            link.exit().remove();
-            link.enter()
-              .append('path')
-              .attr('class', 'link')
-              .merge(link)
-              .attr('stroke', d => colours(d.target.data.parents.sort().join('-')))
-              .attr('d', linkFn);
-
-            const node = graphGroup.selectAll('.node')
-              .data(newNodes);
-            node.exit().remove();
-            const newNode = node.enter()
-              .append('g')
-              .attr('class', 'node');
-
-            newNode.append('path')
-              .attr('d', drawNodePath);
-            newNode.append('text')
-              .attr('dy', - 3)
-              .attr('x', 6);
-
-            newNode.merge(node)
-              .attr('transform', d => `translate(${d.y},${d.x})`)
-              .selectAll('text')
-              .text(d => d.id);
-        }
 
         const root = d3.stratify()
           .parentId((d: any) => d.parent)
@@ -490,7 +340,7 @@ export class TreeComponent implements OnInit {
 
         // Map the different sets of parents,
         // assigning each parent an array of partners
-        getLinks(root.descendants())
+        this.getLinks(root.descendants())
           .filter(l => l.target.data.parents)
           .forEach(l => {
               const parentNames = l.target.data.parents;
@@ -511,7 +361,7 @@ export class TreeComponent implements OnInit {
           });
 
         // Take nodes with more partners first,
-// also counting the partners of the children
+        // also counting the partners of the children
         root
           .sum((d: any) => (d.value || 0) + (d.partners || []).length)
           .sort((a: any, b: any) => b.value - a.value);
@@ -524,9 +374,161 @@ export class TreeComponent implements OnInit {
               return 1 + (totalPartners / 5);
           });
 
-        draw(tree(root));
+        this.draw(tree(root));
 
     }
 
     flatSingle = arr => [].concat(...arr);
+
+    getLinks(otherLinks): any[] {
+        return this.flatSingle(
+          otherLinks
+            .filter(n => n.data.parents !== undefined)
+            .map(n => n.data.parents.map(p => ({
+                source: otherLinks.find(deepN => deepN.id === p),
+                target: n
+            })))
+        );
+    }
+
+    drawNodePath = (d: any) => {
+        const radius = 5;
+        // The number of partners determines the node height
+        // But when a node has only one partner,
+        // treat it the same as when it has zero
+        const nPartners = (d.data.partners && d.data.partners.length > 1)
+          ? d.data.partners.length
+          : 0;
+
+        // We want to centre each node
+        const straightLineOffset = (nPartners * this.offsetPerPartner) / 2;
+
+        const context = d3.path();
+        context.moveTo(- radius, 0);
+        context.lineTo(- radius, - straightLineOffset);
+        context.arc(0, - straightLineOffset, radius, - Math.PI, 0);
+        context.lineTo(radius, straightLineOffset);
+        context.arc(0, straightLineOffset, radius, 0, Math.PI);
+        context.closePath();
+
+        return context + '';
+    };
+
+    drawLinkCurve = (x0, y0, x1, y1, offset, radius) => {
+        const context = d3.path();
+        context.moveTo(x0, y0);
+        context.lineTo(x1 - 2 * radius - offset, y0);
+
+        // If there is not enough space to draw two corners, reduce the corner radius
+        if (Math.abs(y0 - y1) < 2 * radius) {
+            radius = Math.abs(y0 - y1) / 2;
+        }
+
+        if (y0 < y1) {
+            context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 + radius, radius);
+            context.lineTo(x1 - offset - radius, y1 - radius);
+            context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
+        } else if (y0 > y1) {
+            context.arcTo(x1 - offset - radius, y0, x1 - offset - radius, y0 - radius, radius);
+            context.lineTo(x1 - offset - radius, y1 + radius);
+            context.arcTo(x1 - offset - radius, y1, x1 - offset, y1, radius);
+        }
+        context.lineTo(x1, y1);
+        return context + '';
+    };
+
+    getPartnershipOffset = (parent, partner) => {
+        let partnershipId;
+        let level;
+        if (partner !== undefined) {
+            // On every level, every relationship gets its own offset. If a relationship
+            // spans multiple levels, the furthest level is chosen
+            level = Math.max(parent.depth, partner.level);
+            if (!this.partnershipsPerLevel[ level ]) {
+                this.partnershipsPerLevel[ level ] = [];
+            }
+            partnershipId = [ parent.id, partner.id ].sort().join('-');
+        } else {
+            level = parent.depth;
+            if (!this.partnershipsPerLevel[ level ]) {
+                this.partnershipsPerLevel[ level ] = [];
+            }
+            partnershipId = parent.id;
+        }
+
+        // Assume that the partnership already has a slot assigned
+        const partnershipOffset = this.partnershipsPerLevel[ level ].indexOf(partnershipId);
+        if (partnershipOffset === - 1) {
+            // Apparently not
+            return this.partnershipsPerLevel[ level ].push(partnershipId) - 1;
+        }
+        return partnershipOffset;
+    };
+
+    linkFn = (link: any) => {
+        const thisParent = link.source;
+        const partnerId = link.target.data.parents.find(p => p !== thisParent.id);
+        const partners = thisParent.data.partners || [];
+
+        // Let the first link start with this negative offset
+        // But when a node has only one partner,
+        // treat it the same as when it has zero
+        const startOffset = (partners.length > 1)
+          ? - (partners.length * this.offsetPerPartner) / 2
+          : 0;
+
+        const partner = partners.find(p => p.id === partnerId);
+
+        // Chaos has no partner, nor Zeus with Athena
+        const nthPartner = partner !== undefined
+          ? partners.indexOf(partner)
+          : (partners || []).length;
+        const partnershipOffset = this.getPartnershipOffset(thisParent, partner);
+
+        return this.drawLinkCurve(
+          thisParent.y,
+          thisParent.x + startOffset + this.offsetPerPartner * nthPartner,
+          link.target.y,
+          link.target.x,
+          this.offsetStep * partnershipOffset,
+          this.lineRadius
+        );
+    };
+
+    draw(otherRoot): void {
+        // Now every node has had it's position set, we can draw them now
+        const newNodes = otherRoot.descendants()
+          .filter(n => !n.id.startsWith('pseudo-'));
+        const links = this.getLinks(newNodes)
+          .filter(l => !l.source.id.startsWith('pseudo-'));
+
+        const link = this.graphGroup.selectAll('.link')
+          .data(links);
+        link.exit().remove();
+        link.enter()
+          .append('path')
+          .attr('class', 'link')
+          .merge(link)
+          .attr('stroke', d => this.colours(d.target.data.parents.sort().join('-')))
+          .attr('d', this.linkFn);
+
+        const node = this.graphGroup.selectAll('.node')
+          .data(newNodes);
+        node.exit().remove();
+        const newNode = node.enter()
+          .append('g')
+          .attr('class', 'node');
+
+        newNode.append('path')
+          .attr('d', this.drawNodePath);
+        newNode.append('text')
+          .attr('dy', - 3)
+          .attr('x', 6);
+
+        newNode.merge(node)
+          .attr('transform', d => `translate(${d.y},${d.x})`)
+          .selectAll('text')
+          .text(d => d.id);
+    }
+
 }
