@@ -6,13 +6,15 @@ import { AppComponent } from './app.component';
 import { BarComponent } from './bar/bar.component';
 import { PieComponent } from './pie/pie.component';
 import { ScatterComponent } from './scatter/scatter.component';
+import { TreeComponent } from './tree/tree.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     BarComponent,
     PieComponent,
-    ScatterComponent
+    ScatterComponent,
+    TreeComponent
   ],
   imports: [
     BrowserModule,
