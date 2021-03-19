@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BarComponent } from './bar/bar.component';
+import { CollapsibleTreeComponent } from './collapsible-tree/collapsible-tree.component';
 import { PieComponent } from './pie/pie.component';
 import { TreeComponent } from './tree/tree.component';
 
 const routes: Routes = [
-    { path: '', redirectTo: '/bar', pathMatch: 'full' },
+    { path: '', redirectTo: '/collapsible-tree', pathMatch: 'full' },
     { path: 'bar', component: BarComponent },
     { path: 'pie', component: PieComponent },
     // { path: 'scatter', component: ScatterComponent },
     { path: 'tree', component: TreeComponent },
+    { path: 'collapsible-tree', component: CollapsibleTreeComponent },
 ];
 
 @NgModule({

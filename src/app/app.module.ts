@@ -7,6 +7,7 @@ import { BarComponent } from './bar/bar.component';
 import { PieComponent } from './pie/pie.component';
 import { ScatterComponent } from './scatter/scatter.component';
 import { TreeComponent } from './tree/tree.component';
+import { CollapsibleTreeComponent } from './collapsible-tree/collapsible-tree.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { TreeComponent } from './tree/tree.component';
     BarComponent,
     PieComponent,
     ScatterComponent,
-    TreeComponent
+    TreeComponent,
+    CollapsibleTreeComponent
   ],
   imports: [
     BrowserModule,
