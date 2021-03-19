@@ -7,11 +7,11 @@ import { PieComponent } from './pie/pie.component';
 import { TreeComponent } from './tree/tree.component';
 
 const routes: Routes = [
-    { path: '', redirectTo: '/collapsible-tree', pathMatch: 'full' },
-    { path: 'bar', component: BarComponent },
-    { path: 'pie', component: PieComponent },
+    { path: '', redirectTo: '/collapsible-tree-tooltip', pathMatch: 'full' },
+    // { path: 'bar', component: BarComponent },
+    // { path: 'pie', component: PieComponent },
     // { path: 'scatter', component: ScatterComponent },
-    { path: 'tree', component: TreeComponent },
+    // { path: 'tree', component: TreeComponent },
     { path: 'collapsible-tree', component: CollapsibleTreeComponent },
     { path: 'collapsible-tree-tooltip', component: CollapsibleTreeTooltipComponent }
 ];
