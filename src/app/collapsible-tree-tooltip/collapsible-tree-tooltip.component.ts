@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
-import * as dataJson from '../data/data.json';
+import * as dataJson from '../../assets/data.json';
 
 @Component({
     selector: 'app-collapsible-tree-tooltip',
