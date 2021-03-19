@@ -8,6 +8,7 @@ import { PieComponent } from './pie/pie.component';
 import { ScatterComponent } from './scatter/scatter.component';
 import { TreeComponent } from './tree/tree.component';
 import { CollapsibleTreeComponent } from './collapsible-tree/collapsible-tree.component';
+import { CollapsibleTreeTooltipComponent } from './collapsible-tree-tooltip/collapsible-tree-tooltip.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { CollapsibleTreeComponent } from './collapsible-tree/collapsible-tree.co
     PieComponent,
     ScatterComponent,
     TreeComponent,
-    CollapsibleTreeComponent
+    CollapsibleTreeComponent,
+    CollapsibleTreeTooltipComponent
   ],
   imports: [
     BrowserModule,
