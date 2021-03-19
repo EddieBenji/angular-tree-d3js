@@ -70,14 +70,9 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
         // open close context menu
         // tslint:disable-next-line:only-arrow-functions
-        // d3.select('body').on('click.context-menu-g', function(): void {
-        //
-        //     console.log('data-type', (d3 as any).event.target.getAttribute('data-type'));
-        //     if ((d3 as any).event.target.getAttribute('data-type') !== 'contextMenu') {
-        //         d3.selectAll('.context-menu-g').style('display', 'none');
-        //     }
-        //
-        // }.bind(this));
+        d3.select('body').on('click.context-menu-g', function (): void {
+            d3.selectAll('.context-menu-g').style('display', 'none');
+        }.bind(this));
 
         this.root = d3.hierarchy(this.data);
         this.root.x0 = 0;
@@ -560,7 +555,7 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
         d3.selectAll('.context-menu-g').style('display', 'none');
         d3.select('#nodeContextMenuGroup' + nodeData.id).style('display', 'block');
-        // (d3 as any).event.preventDefault();
+        mouseEvent.preventDefault();
     }
 
 }
