@@ -102,9 +102,10 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
     }
 
     // Toggle children on click.
-    click = (mouseEvent, d, i, n) => {
+    click = (mouseEvent, d) => {
         this.resetRootPath(d);
-        // d3.selectAll('.node').select('rect').classed('selected-node', false);
+        // remove the selection from the leaf node:
+        d3.selectAll('.node').select('rect').classed('selected-node', false);
 
         if (d.children) {
             d._children = d.children;
@@ -113,15 +114,8 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
             d.children = d._children;
             d._children = null;
         }
-        // const other = d3.selectAll('.node').select(`.${this.getNodeId(d)}`);
-        // other.classed('selected-node', true);
-
-        // d3.select(this).classed("selected-node", d3.select(this).classed("selected-node") ? false : true); // for toggle
-        // d3.select(n[ i ]).classed('selected-node', true);
-        // d3.select(d);
-        // const temp = d3.select(`#${this.getNodeId(d)}`);
-        // const temp = d3.select(d);
-        // other.classed('selected-node', true);
+        // add the selection to the new leaf node selected:
+        d3.selectAll('.node').select(`rect.${this.getNodeId(d)}`).classed('selected-node', true);
 
         // If the node has a parent, then collapse its child nodes except for this clicked node.
         if (d.parent) {
@@ -220,9 +214,10 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
           });
 
         // Enter any new nodes at the parent's previous position.
-        // console.log('source: ', source);
         nodeEnter.append('rect')
-          .attr('class', this.getNodeId(source))
+          .attr('class', (d) => {
+              return this.getNodeId(d);
+          })
           .attr('y', - this.barHeight / 2)
           .attr('height', this.barHeight)
           .attr('width', this.barWidth)
@@ -454,7 +449,6 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
     }
 
     private getNodeId(source): string {
-        console.log(source);
         return `${source.data.name}-${source.id}`;
     }
 
@@ -535,7 +529,6 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
         d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
         d3.select('#nodeInfoID' + d.id).attr('visibility', 'visible');
         d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
-
     }
 
     mousemove(mouseEvent, d): void {
