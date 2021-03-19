@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 import * as dataJson from '../data/data.json';
 
@@ -7,7 +7,7 @@ import * as dataJson from '../data/data.json';
     templateUrl: './collapsible-tree-tooltip.component.html',
     styleUrls: [ './collapsible-tree-tooltip.component.scss' ]
 })
-export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
+export class CollapsibleTreeTooltipComponent implements AfterViewInit {
 
     @ViewChild('chart4', { static: true }) private chartContainer: ElementRef;
 
@@ -21,31 +21,25 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
     width = 960;
     barHeight = 30;
     barRadius = 15;
-    // let barWidth = (width - margin.left - margin.right) * 0.8;
     widthAndDepth = 140;
     barWidth = this.widthAndDepth * 0.8;
     barDepth = this.widthAndDepth + 40;
     verticalSpace = 15;
-    barEndStartPointDistance = 100;
     tooltip = { width: 200, height: 24, textMargin: 5 };
 
     element: any;
     duration = 400;
-    links: any;
     nodes: any[];
     i = 0;
 
     constructor() {
     }
 
-    ngOnInit(): void {
-    }
-
     ngAfterViewInit(): void {
         this.renderTreeChart();
     }
 
-    getSelectedItem(d): void {
+    getSelectedItem(mouseEvent, d): void {
         this.name = d.data.name;
     }
 
@@ -70,9 +64,9 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
         // open close context menu
         // tslint:disable-next-line:only-arrow-functions
-        d3.select('body').on('click.context-menu-g', function (): void {
+        d3.select('body').on('click.context-menu-g', () => {
             d3.selectAll('.context-menu-g').style('display', 'none');
-        }.bind(this));
+        });
 
         this.root = d3.hierarchy(this.data);
         this.root.x0 = 0;
@@ -114,11 +108,11 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
         // If the node has a parent, then collapse its child nodes except for this clicked node.
         if (d.parent) {
-            d.parent.children.forEach(function (element) {
+            d.parent.children.forEach((element) => {
                 if (d.data.name !== element.data.name) {
                     this.collapseOtherChildren(element);
                 }
-            }.bind(this));
+            });
         }
 
         this.update(d);
@@ -153,7 +147,7 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
         // Compute the "layout". TODO https://github.com/d3/d3-hierarchy/issues/67
         let index = - 1;
         // tslint:disable-next-line:only-arrow-functions
-        this.root.eachBefore(function (d): void {
+        this.root.eachBefore((d): void => {
             ++ index;
             let setXAxis = index * (this.barHeight + this.verticalSpace);
 
@@ -172,7 +166,7 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
             d.x = setXAxis;
             d.y = d.depth * this.barDepth;
-        }.bind(this));
+        });
 
         // Update the nodes…
         const node = this.svg.selectAll('g.node')
@@ -234,7 +228,6 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
           });
 
         // Tooltip group
-
         nodeEnterTooltip.append('rect')
           .attr('id', (d: any) => {
               return 'nodeInfoID' + d.id;
@@ -249,7 +242,7 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
                 .attr('y', - 99999)
                 .text(d.data.tooltip.toString());
               const size = container.node().getBBox();
-              // container.remove();
+              container.remove();
               return size.width;
           })
           .attr('height', this.tooltip.height)
@@ -292,17 +285,12 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
           .attr('y', 12)
           .attr('class', 'context-menu-title')
           .attr('data-type', 'contextMenu')
-          .on('click', this.getSelectedItem.bind(this))
+          .on('click', this.getSelectedItem.bind(this)) // in here we need to pass the context this, in order to attach the name to the
+          // property from this component.
           .style('fill', '#000')
           .text((d: any) => {
               return d.data.contextMenu.title;
           });
-
-        // .append("tspan")
-        // .attr('data-type', 'contextMenu')
-        // .attr('x', 135)
-        // .attr('dy', '1.5em')
-        // .text(function (d: any) { return 'Info: ' + d.data.name; });
 
         nodeEnterContextMenu.append('foreignObject')
           .attr('x', 135)
@@ -398,10 +386,10 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
           .style('fill', 'none')
           .style('stroke', '#ccc')
           .style('stroke-width', '1px')
-          .attr('d', function (d) {
+          .attr('d', (d) => {
               const o = { x: source.x0, y: source.y0 };
               return this.customDiagonal({ source: o, target: o } as any);
-          }.bind(this))
+          })
           .transition()
           .duration(this.duration)
           .attr('d', this.customDiagonal.bind(this));
@@ -430,10 +418,10 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
         // Transition exiting nodes to the parent's new position.
         link.exit().transition()
           .duration(this.duration)
-          .attr('d', function (d) {
+          .attr('d', (d) => {
               const o = { x: source.x, y: source.y };
               return this.customDiagonal({ source: o, target: o } as any);
-          }.bind(this))
+          })
           .remove();
 
         // Stash the old positions for transition.
@@ -464,9 +452,9 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
     collapseAllChildren(node): void {
         if (node.children) {
-            node.children.forEach(function (c): void {
+            node.children.forEach((c): void => {
                 this.collapseAllChildren(c);
-            }.bind(this));
+            });
             node._children = node.children;
             node.children = null;
         }
@@ -474,9 +462,9 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
 
     collapseOtherChildren(d): void {
         if (d.children) {
-            d.children.forEach(function (c): void {
+            d.children.forEach((c): void => {
                 this.collapseOtherChildren(c);
-            }.bind(this));
+            });
             d._children = d.children;
             d.children = null;
         }
@@ -502,9 +490,9 @@ export class CollapsibleTreeTooltipComponent implements OnInit, AfterViewInit {
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
     doResetPath(d): void {
         if (d.children) {
-            d.children.forEach(function (c): void {
+            d.children.forEach((c): void => {
                 this.doResetPath(c);
-            }.bind(this));
+            });
             d.color = undefined;
             d.strokeWidth = undefined;
         }
