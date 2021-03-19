@@ -1,0 +1,278 @@
+{
+  "name": "A1",
+  "tooltip": "A1 tooltip",
+  "contextMenu": {
+    "title": "A1",
+    "content": "",
+    "subContent": ""
+  },
+  "value": 100,
+  "children": [
+    {
+      "name": "B1",
+      "tooltip": "B1 tooltip",
+      "contextMenu": {
+        "title": "B1 | A1",
+        "content": "",
+        "subContent": ""
+      },
+      "value": 100,
+      "children": [
+        {
+          "name": "C1",
+          "tooltip": "C1 tooltip",
+          "contextMenu": {
+            "title": "C1 | B1 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C2",
+          "tooltip": "C2 tooltip",
+          "contextMenu": {
+            "title": "C2 | B1 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C3",
+          "tooltip": "C3 tooltip",
+          "contextMenu": {
+            "title": "C3 | B1 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        }
+      ]
+    },
+    {
+      "name": "B2",
+      "tooltip": "B2 tooltip",
+      "contextMenu": {
+        "title": "B2 | A1",
+        "content": "",
+        "subContent": ""
+      },
+      "value": 200,
+      "children": [
+        {
+          "name": "C4",
+          "tooltip": "C4 tooltip",
+          "contextMenu": {
+            "title": "C4 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C5",
+          "tooltip": "C5 tooltip",
+          "contextMenu": {
+            "title": "C5 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C6",
+          "tooltip": "C6 tooltip",
+          "contextMenu": {
+            "title": "C6 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C7",
+          "tooltip": "C7 tooltip",
+          "contextMenu": {
+            "title": "C7 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C8",
+          "tooltip": "C8 tooltip",
+          "contextMenu": {
+            "title": "C8 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C9",
+          "tooltip": "C9 tooltip",
+          "contextMenu": {
+            "title": "C9 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C10",
+          "tooltip": "C10 tooltip",
+          "contextMenu": {
+            "title": "C10 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C11",
+          "tooltip": "C11 tooltip",
+          "contextMenu": {
+            "title": "C11 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C12",
+          "tooltip": "C12 tooltip",
+          "contextMenu": {
+            "title": "C12 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C13",
+          "tooltip": "C13 tooltip",
+          "contextMenu": {
+            "title": "C13 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C14",
+          "tooltip": "C14 tooltip",
+          "contextMenu": {
+            "title": "C14 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C15",
+          "tooltip": "C15 tooltip",
+          "contextMenu": {
+            "title": "C15 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C16",
+          "tooltip": "C16 tooltip",
+          "contextMenu": {
+            "title": "C16 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C17",
+          "tooltip": "C17 tooltip",
+          "contextMenu": {
+            "title": "C17 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C18",
+          "tooltip": "C18 tooltip",
+          "contextMenu": {
+            "title": "C18 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C19",
+          "tooltip": "C19 tooltip",
+          "contextMenu": {
+            "title": "C19 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        },
+        {
+          "name": "C20",
+          "tooltip": "C20 tooltip",
+          "contextMenu": {
+            "title": "C20 | B2 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        }
+      ]
+    },
+    {
+      "name": "B3",
+      "tooltip": "B3 tooltip",
+      "contextMenu": {
+        "title": "B3 | A1",
+        "content": "",
+        "subContent": ""
+      },
+      "value": 200,
+      "children": [
+        {
+          "name": "C27",
+          "tooltip": "C27 tooltip",
+          "contextMenu": {
+            "title": "C27 | B3 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 100
+        },
+        {
+          "name": "C28",
+          "tooltip": "C28 tooltip",
+          "contextMenu": {
+            "title": "C28 | B3 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 300
+        },
+        {
+          "name": "C29",
+          "tooltip": "C29 tooltip",
+          "contextMenu": {
+            "title": "C29 | B3 | A1",
+            "content": "",
+            "subContent": ""
+          },
+          "value": 200
+        }
+      ]
+    }
+  ]
+}
