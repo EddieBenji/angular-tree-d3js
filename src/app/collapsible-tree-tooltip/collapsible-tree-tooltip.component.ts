@@ -63,7 +63,6 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
           .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
         // open close context menu
-        // tslint:disable-next-line:only-arrow-functions
         d3.select('body').on('click.context-menu-g', () => {
             d3.selectAll('.context-menu-g').style('display', 'none');
         });
@@ -71,7 +70,7 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
         this.root = d3.hierarchy(this.data);
         this.root.x0 = 0;
         this.root.y0 = 0;
-        this.collapseAllChildren(this.root);
+        this.collapseChildrenByParentNode(this.root);
         this.update(this.root);
 
     }
@@ -110,7 +109,7 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
         if (d.parent) {
             d.parent.children.forEach((element) => {
                 if (d.data.name !== element.data.name) {
-                    this.collapseOtherChildren(element);
+                    this.collapseChildrenByParentNode(element);
                 }
             });
         }
@@ -450,20 +449,10 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
     }
 
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
-    collapseAllChildren(node): void {
-        if (node.children) {
-            node.children.forEach((c): void => {
-                this.collapseAllChildren(c);
-            });
-            node._children = node.children;
-            node.children = null;
-        }
-    }
-
-    collapseOtherChildren(d): void {
+    collapseChildrenByParentNode(d): void {
         if (d.children) {
             d.children.forEach((c): void => {
-                this.collapseOtherChildren(c);
+                this.collapseChildrenByParentNode(c);
             });
             d._children = d.children;
             d.children = null;
