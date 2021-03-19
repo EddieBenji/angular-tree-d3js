@@ -47,7 +47,7 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
 
         this.element = this.chartContainer.nativeElement;
         this.svg = d3.select(this.element).append('svg')
-          .attr('width', this.element.offsetWidth) // + margin.left + margin.right)
+          .attr('width', '100%') // + margin.left + margin.right)
           .attr('height', this.element.offsetHeight)
           .attr('id', 'chart4svg')
           .append('g')
