@@ -97,7 +97,7 @@ export class CollapsibleTreeComponent implements OnInit {
     height: number;
     width: number;
     margin: any = { top: 200, bottom: 90, left: 100, right: 90 };
-    duration = 750;
+    duration = 500;
     nodeWidth = 5;
     nodeHeight = 5;
     nodeRadius = 5;
