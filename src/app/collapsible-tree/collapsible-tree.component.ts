@@ -103,16 +103,12 @@ export class CollapsibleTreeComponent implements OnInit {
     nodeRadius = 5;
     horizontalSeparationBetweenNodes = 5;
     verticalSeparationBetweenNodes = 5;
-    nodeTextDistanceY = '-5px';
-    nodeTextDistanceX = 5;
 
     dragStarted: boolean;
     draggingNode: any;
     nodes: any[];
-    selectedNodeByDrag: any;
 
     selectedNodeByClick: any;
-    previousClickedDomNode: any;
     links: any;
 
     constructor() {
@@ -145,18 +141,7 @@ export class CollapsibleTreeComponent implements OnInit {
         this.root.x0 = this.height / 2;
         this.root.y0 = 10;
 
-        // Collapse after the second level
-        // this.root.children.forEach(collapse);
-
         this.updateChart(this.root);
-
-        // function collapse(d) {
-        //   if (d.children) {
-        //       d._children = d.children;
-        //       d._children.forEach(collapse);
-        //       d.children = null;
-        //   }
-        // }
 
     }
 
