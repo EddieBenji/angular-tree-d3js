@@ -8,13 +8,13 @@ import { TreeComponent } from './tree/tree.component';
 
 const routes: Routes = [
     { path: '', redirectTo: '/collapsible-tree-tooltip', pathMatch: 'full' },
-    { path: '**', redirectTo: '/collapsible-tree-tooltip' }, // no special page for requests that are not found.
     // { path: 'bar', component: BarComponent },
     // { path: 'pie', component: PieComponent },
     // { path: 'scatter', component: ScatterComponent },
     // { path: 'tree', component: TreeComponent },
     { path: 'collapsible-tree', component: CollapsibleTreeComponent },
     { path: 'collapsible-tree-tooltip', component: CollapsibleTreeTooltipComponent },
+    { path: '**', redirectTo: '/collapsible-tree-tooltip' }, // no special page for requests that are not found.
 ];
 
 @NgModule({
