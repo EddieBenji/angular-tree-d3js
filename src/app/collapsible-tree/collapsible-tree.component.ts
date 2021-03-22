@@ -91,6 +91,9 @@ export class CollapsibleTreeComponent implements OnInit {
     tree: any;
     treeLayout: any;
     svg: any;
+    nodeGroupTooltip: any;
+    tooltip = { width: 200, height: 24, textMargin: 5 };
+    tooltipPosition = { top: 170, left: - 50 };
 
     treeData: any;
 
@@ -114,8 +117,23 @@ export class CollapsibleTreeComponent implements OnInit {
     constructor() {
     }
 
+    private hideOtherTooltipsIfAny(): void {
+        const tooltip = d3.selectAll('.tooltip-g');
+        tooltip.transition()
+          .duration(this.duration)
+          .attr('transform', (diag: any) => {
+              return 'translate(' + diag.y + ',' + diag.x + ')';
+          });
+
+        d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
+        d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
+    }
+
     ngOnInit(): void {
         this.renderTreeChart();
+        setTimeout(() => {
+            this.hideOtherTooltipsIfAny();
+        }, 500);
     }
 
     renderTreeChart(): void {
@@ -127,6 +145,7 @@ export class CollapsibleTreeComponent implements OnInit {
         this.svg = d3.select(element).append('svg')
           .attr('width', element.offsetWidth)
           .attr('height', element.offsetHeight)
+          .attr('id', 'chartSvgContainer')
           .append('g')
           .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
@@ -135,6 +154,11 @@ export class CollapsibleTreeComponent implements OnInit {
           .size([ this.height, this.width ])
           .nodeSize([ this.nodeWidth + this.horizontalSeparationBetweenNodes, this.nodeHeight + this.verticalSeparationBetweenNodes ])
           .separation((a, b) => a.parent === b.parent ? 5 : 10);
+
+        // Tooltip:
+        this.nodeGroupTooltip = d3.select('svg#chartSvgContainer').append('g')
+          .attr('class', 'tooltip-group')
+          .attr('transform', 'translate(' + this.tooltipPosition.left + ',' + this.tooltipPosition.top + ')');
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, (d) => d.children);
@@ -159,7 +183,6 @@ export class CollapsibleTreeComponent implements OnInit {
 
     updateChart(source): void {
         let i = 0;
-        console.log(source);
         this.treeData = this.tree(this.root);
         this.nodes = this.treeData.descendants();
         this.links = this.treeData.descendants().slice(1);
@@ -170,12 +193,24 @@ export class CollapsibleTreeComponent implements OnInit {
         const node = this.svg.selectAll('g.node')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
 
+        const nodesTooltip = this.nodeGroupTooltip.selectAll('g')
+          .data(this.nodes, (d) => d.id || (d.id = ++ i));
+
         const nodeEnter = node.enter().append('g')
           .attr('class', 'node')
           .attr('transform', (d) => {
               return 'translate(' + source.y0 + ',' + source.x0 + ')';
           })
+          .on('mouseover', this.mouseover.bind(this))
+          .on('mousemove', this.mousemove.bind(this))
+          .on('mouseout', this.mouseout.bind(this))
           .on('click', this.click);
+
+        const nodeEnterTooltip = nodesTooltip.enter().append('g')
+          .attr('class', 'tooltip-g')
+          .attr('transform', (d) => {
+              return 'translate(' + source.y0 + ',' + source.x0 + ')';
+          });
 
         nodeEnter.append('circle')
           .attr('class', 'node')
@@ -194,6 +229,42 @@ export class CollapsibleTreeComponent implements OnInit {
           })
           .style('font', '12px sans-serif')
           .text((d) => d.data.name);
+
+        // Tooltip group
+        nodeEnterTooltip.append('rect')
+          .attr('id', (d: any) => {
+              return 'nodeInfoID' + d.id;
+          })
+          .attr('x', 120)
+          .attr('y', - 12)
+          .attr('rx', 12)
+          .attr('width', (d: any) => {
+              const container = d3.select(this.chartContainer.nativeElement).append('svg');
+              container.append('text')
+                .attr('x', - 99999)
+                .attr('y', - 99999)
+                .text(`${d.data.name.toString()}--`);
+              const size = container.node().getBBox();
+              container.remove();
+              return size.width;
+          })
+          .attr('height', this.tooltip.height)
+          .attr('class', 'tooltip-rect')
+          .style('fill-opacity', 1)
+          .attr('visibility', 'hidden');
+
+        nodeEnterTooltip.append('text')
+          .attr('id', (d: any) => {
+              return 'nodeInfoTextID' + d.id;
+          })
+          .attr('x', 128)
+          .attr('y', 4)
+          .attr('class', 'tooltip-text')
+          .attr('visibility', 'hidden')
+          .append('tspan')
+          .text((d: any) => {
+              return d.data.name;
+          });
 
         const nodeUpdate = nodeEnter.merge(node);
 
@@ -215,6 +286,20 @@ export class CollapsibleTreeComponent implements OnInit {
         const nodeExit = node.exit().transition()
           .duration(this.duration)
           .attr('transform', (d) => {
+              return 'translate(' + source.y + ',' + source.x + ')';
+          })
+          .remove();
+
+        // Transition tooltip to their new position.
+        nodeEnterTooltip.transition()
+          // nodesTooltip.transition()
+          .duration(this.duration)
+          .attr('transform', (d: any) => {
+              return 'translate(' + d.y + ',' + d.x + ')';
+          });
+
+        nodeEnterTooltip.exit().transition().duration(this.duration)
+          .attr('transform', (d: any) => {
               return 'translate(' + source.y + ',' + source.x + ')';
           })
           .remove();
@@ -263,6 +348,23 @@ export class CollapsibleTreeComponent implements OnInit {
                   ${(s.y + d.y) / 2} ${d.x},
                   ${d.y} ${d.x}`;
         }
+    }
+
+    mouseover(mouseEvent, d): void {
+        this.hideOtherTooltipsIfAny();
+        d3.select('#nodeInfoID' + d.id).attr('visibility', 'visible');
+        d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
+    }
+
+    mousemove(mouseEvent, d): void {
+        this.hideOtherTooltipsIfAny();
+        d3.select('#nodeInfoID' + d.id).attr('visibility', 'visible');
+        d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
+    }
+
+    mouseout(mouseEvent, d): void {
+        d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
+        d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
     }
 
 }
