@@ -262,8 +262,8 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('text-anchor', (d) => {
               return d.children || d._children ? 'end' : 'start';
           })
-          .style('font', '12px sans-serif')
-          .text((d) => d.data.name);
+          .style('font', '12px sans-serif');
+          // .text((d) => d.data.name);
 
         // Tooltip group
         nodeEnterTooltip.append('rect')

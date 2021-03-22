@@ -19,14 +19,50 @@
       "value": 100,
       "children": [
         {
-          "name": "C1",
-          "tooltip": "C1 tooltip",
+          "name": "C101",
+          "tooltip": "C101 tooltip",
           "contextMenu": {
             "title": "C1 | B1 | A1",
             "content": "",
             "subContent": ""
           },
-          "value": 100
+          "value": 100,
+          "children": [
+            {
+              "name": "D1",
+              "tooltip": "D1 tooltip",
+              "contextMenu": {
+                "title": "D1 | C1 | B1 | A1",
+                "content": "",
+                "subContent": ""
+              },
+              "value": 100,
+              "children": [
+                {
+                  "name": "D1",
+                  "tooltip": "D1 tooltip",
+                  "contextMenu": {
+                    "title": "D1 | C1 | B1 | A1",
+                    "content": "",
+                    "subContent": ""
+                  },
+                  "value": 100,
+                  "children": [
+                    {
+                      "name": "D1",
+                      "tooltip": "D1 tooltip",
+                      "contextMenu": {
+                        "title": "D1 | C1 | B1 | A1",
+                        "content": "",
+                        "subContent": ""
+                      },
+                      "value": 100
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "C2",
