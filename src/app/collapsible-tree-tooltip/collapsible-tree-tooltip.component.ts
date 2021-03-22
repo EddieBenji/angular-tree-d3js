@@ -135,7 +135,8 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
         const height = Math.max(500, this.nodes.length * this.barHeight * 2 + this.margin.top + this.margin.bottom);
         // for the first 2 levels, no need of recalculating the width. When we're at the 3rd level, then we will start recalculating the
         // width.
-        const width = (source.depth < 3 ? 0 : source.depth) * 180 + this.element.offsetWidth;
+        const deepWidth = source.children ? (source.depth < 3 ? 0 : source.depth) : (source.depth < 3 ? 0 : source.depth - 1);
+        const width = deepWidth * 180 + this.element.offsetWidth;
 
         d3.select('svg#chart4svg').transition()
           .duration(this.duration)
