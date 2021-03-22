@@ -47,7 +47,7 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
 
         this.element = this.chartContainer.nativeElement;
         this.svg = d3.select(this.element).append('svg')
-          .attr('width', '100%') // + margin.left + margin.right)
+          .attr('width', this.element.offsetWidth) // + margin.left + margin.right)
           .attr('height', this.element.offsetHeight)
           .attr('id', 'chart4svg')
           .append('g')
@@ -133,15 +133,19 @@ export class CollapsibleTreeTooltipComponent implements AfterViewInit {
         // Compute the flattened node list.
         this.nodes = this.root.descendants();
         const height = Math.max(500, this.nodes.length * this.barHeight * 2 + this.margin.top + this.margin.bottom);
+        // for the first 2 levels, no need of recalculating the width. When we're at the 3rd level, then we will start recalculating the
+        // width.
+        const width = (source.depth < 3 ? 0 : source.depth) * 180 + this.element.offsetWidth;
 
-        // console.log(nodes.length);
         d3.select('svg#chart4svg').transition()
           .duration(this.duration)
-          .attr('height', height);
+          .attr('height', height)
+          .attr('width', width);
 
         d3.select(self.frameElement).transition()
           .duration(this.duration)
-          .style('height', height + 'px');
+          .style('height', height + 'px')
+          .attr('width', `${height}px`);
 
         // Compute the "layout". TODO https://github.com/d3/d3-hierarchy/issues/67
         let index = - 1;
