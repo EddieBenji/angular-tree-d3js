@@ -91,9 +91,15 @@ export class CollapsibleTreeComponent implements OnInit {
     tree: any;
     treeLayout: any;
     svg: any;
+    // Tooltip attributes:
     nodeGroupTooltip: any;
     tooltip = { width: 200, height: 24, textMargin: 5 };
     tooltipPosition = { top: 170, left: - 50 };
+
+    // context menu attributes:
+    nodeGroupContextMenu: any;
+    nameFromContextMenu: string;
+    contextMenuPosition = { xAxis: 0, yAxis: 200 };
 
     treeData: any;
 
@@ -147,6 +153,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('height', element.offsetHeight)
           .attr('id', 'chartSvgContainer')
           .append('g')
+          .attr('class', 'nodes')
           .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
         // declares a tree layout and assigns the size
@@ -160,6 +167,17 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('class', 'tooltip-group')
           .attr('transform', 'translate(' + this.tooltipPosition.left + ',' + this.tooltipPosition.top + ')');
 
+        // Right click:
+        this.nodeGroupContextMenu = d3.select('svg#chartSvgContainer').append('g')
+          .attr('class', 'context-group')
+          .attr('transform', 'translate(' + this.contextMenuPosition.xAxis + ',' + this.contextMenuPosition.yAxis + ')');
+
+
+        // close context menu if clicked outside of it.
+        d3.select('body').on('click.context-menu-g', () => {
+            d3.selectAll('.context-menu-g').style('display', 'none');
+        });
+
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, (d) => d.children);
         this.root.x0 = this.height / 2;
@@ -169,8 +187,11 @@ export class CollapsibleTreeComponent implements OnInit {
 
     }
 
+    getSelectedItem(mouseEvent, d): void {
+        this.nameFromContextMenu = d.data.name;
+    }
+
     click = (mouseEvent, nodeData) => {
-        console.log('click');
         if (nodeData.children) {
             nodeData._children = nodeData.children;
             nodeData.children = null;
@@ -196,6 +217,9 @@ export class CollapsibleTreeComponent implements OnInit {
         const nodesTooltip = this.nodeGroupTooltip.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
 
+        const nodesContextMenu = this.nodeGroupContextMenu.selectAll('g')
+          .data(this.nodes, (d) => d.id || (d.id = ++ i));
+
         const nodeEnter = node.enter().append('g')
           .attr('class', 'node')
           .attr('transform', (d) => {
@@ -204,10 +228,21 @@ export class CollapsibleTreeComponent implements OnInit {
           .on('mouseover', this.mouseover.bind(this))
           .on('mousemove', this.mousemove.bind(this))
           .on('mouseout', this.mouseout.bind(this))
+          .on('contextmenu', this.contextmenu.bind(this))
           .on('click', this.click);
 
         const nodeEnterTooltip = nodesTooltip.enter().append('g')
           .attr('class', 'tooltip-g')
+          .attr('transform', (d) => {
+              return 'translate(' + source.y0 + ',' + source.x0 + ')';
+          });
+
+        const nodeEnterContextMenu = nodesContextMenu.enter().append('g')
+          .attr('class', 'context-menu-g')
+          .attr('id', (d: any) => {
+              return 'nodeContextMenuGroup' + d.id;
+          })
+          .style('display', 'none')
           .attr('transform', (d) => {
               return 'translate(' + source.y0 + ',' + source.x0 + ')';
           });
@@ -266,6 +301,50 @@ export class CollapsibleTreeComponent implements OnInit {
               return d.data.name;
           });
 
+        // ContextMenu group
+        nodeEnterContextMenu.append('rect')
+          .attr('id', (d: any) => {
+              return 'nodeContextMenuID' + d.id;
+          })
+          .attr('x', 120)
+          .attr('y', - 12)
+          .attr('rx', 12)
+          .attr('width', 250)
+          .attr('height', 200)
+          .attr('class', 'context-menu-rect')
+          .attr('data-type', 'contextMenu')
+          .style('fill-opacity', 1);
+
+        nodeEnterContextMenu.append('text')
+          .attr('id', (d: any) => {
+              return 'nodeContextMenuTextID' + d.id;
+          })
+          .attr('x', 135)
+          .attr('y', 12)
+          .attr('class', 'context-menu-title')
+          .attr('data-type', 'contextMenu')
+          .on('click', this.getSelectedItem.bind(this)) // in here we need to pass the context this, in order to attach the name to the
+          // property from this component.
+          .style('fill', '#000')
+          .text((d: any) => {
+              return d.data.name;
+          });
+
+        nodeEnterContextMenu.append('foreignObject')
+          .attr('x', 135)
+          .attr('y', 18)
+          .attr('width', 220)
+          .attr('height', 200)
+          .attr('data-type', 'contextMenu')
+          .append('xhtml').html((d) => {
+            return '<div class="node-text wordwrap" data-type="contextMenu">'
+              + '<div class="divider" data-type="contextMenu"></div>'
+              + '<div data-type="contextMenu" class="menu-heading"><b data-type="contextMenu">Heading</b></div>'
+              + '<div data-type="contextMenu" class="menu-content">Content <span data-type="contextMenu">--</span></div>'
+              + '<div data-type="contextMenu" class="menu-sub-content">Content <span data-type="contextMenu">'
+              + '</div>';
+        });
+
         const nodeUpdate = nodeEnter.merge(node);
 
         nodeUpdate.transition()
@@ -298,7 +377,20 @@ export class CollapsibleTreeComponent implements OnInit {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
 
+        // Transition context to their new position.
+        nodeEnterContextMenu.transition()
+          .duration(this.duration)
+          .attr('transform', (d: any) => {
+              return 'translate(' + d.y + ',' + d.x + ')';
+          });
+
         nodeEnterTooltip.exit().transition().duration(this.duration)
+          .attr('transform', (d: any) => {
+              return 'translate(' + source.y + ',' + source.x + ')';
+          })
+          .remove();
+
+        nodeEnterContextMenu.exit().transition().duration(this.duration)
           .attr('transform', (d: any) => {
               return 'translate(' + source.y + ',' + source.x + ')';
           })
@@ -365,6 +457,19 @@ export class CollapsibleTreeComponent implements OnInit {
     mouseout(mouseEvent, d): void {
         d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
         d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
+    }
+
+    contextmenu(mouseEvent, nodeData: any): void {
+        const contextMenu = d3.selectAll('.context-menu-g');
+        contextMenu.transition()
+          .duration(this.duration)
+          .attr('transform', (d: any): string => {
+              return 'translate(' + d.y + ',' + d.x + ')';
+          });
+
+        d3.selectAll('.context-menu-g').style('display', 'none');
+        d3.select('#nodeContextMenuGroup' + nodeData.id).style('display', 'block');
+        mouseEvent.preventDefault();
     }
 
 }
