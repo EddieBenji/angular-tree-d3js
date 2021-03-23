@@ -174,7 +174,7 @@ export class CollapsibleTreeComponent implements OnInit {
     private updateClickedValueForNode(nodeData): void {
         const newClickedValue = !nodeData.clicked;
         if (this.isLeafNode(nodeData)) {
-            if (newClickedValue && this.currentLeafNodeSelected && this.currentLeafNodeSelected.clicked) {
+            if (newClickedValue && this.currentLeafNodeSelected?.clicked) {
                 // Unselect the other nodes as there is a new leaf node selected.
                 this.unselectOtherNodes();
             }
