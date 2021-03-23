@@ -172,7 +172,7 @@ export class CollapsibleTreeComponent implements OnInit {
         });
         const rawNodeHeights = this.nodes.length * this.nodeHeightAfterBeingRendered;
         // consider also the height of the context menu, so for the last leaf node it gets rendered:
-        this.height = Math.max(this.height, rawNodeHeights + this.margin.top + this.margin.bottom) + this.heightOfContextMenu;
+        this.height = Math.max(this.height, rawNodeHeights + this.margin.top + this.margin.bottom + this.heightOfContextMenu);
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         const mainSvgSection = d3.select('svg#chartSvgContainer');
 
