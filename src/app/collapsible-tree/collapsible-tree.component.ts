@@ -32,6 +32,7 @@ export class CollapsibleTreeComponent implements OnInit {
     nodeGroupContextMenu: any;
     nameFromContextMenu: string;
     contextMenuPosition = { xAxis: 0, yAxis: 500 };
+    heightOfContextMenu = 230;
 
     treeData: any;
 
@@ -43,6 +44,7 @@ export class CollapsibleTreeComponent implements OnInit {
     nodeHeight = 1;
     horizontalSeparationBetweenNodes = 1;
     verticalSeparationBetweenNodes = 1;
+    nodeHeightAfterBeingRendered = 20;
 
     dragStarted: boolean;
     draggingNode: any;
@@ -168,9 +170,13 @@ export class CollapsibleTreeComponent implements OnInit {
                 maxDepth = d.depth;
             }
         });
-        this.height = Math.max(this.height, (this.nodes.length * 20) + this.margin.top + this.margin.bottom);
+        const rawNodeHeights = this.nodes.length * this.nodeHeightAfterBeingRendered;
+        // consider also the height of the context menu, so for the last leaf node it gets rendered:
+        this.height = Math.max(this.height, rawNodeHeights + this.margin.top + this.margin.bottom) + this.heightOfContextMenu;
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
-        d3.select('svg#chartSvgContainer').transition()
+        const mainSvgSection = d3.select('svg#chartSvgContainer');
+
+        mainSvgSection.transition()
           .duration(this.duration)
           .attr('width', this.width)
           .attr('height', this.height);
@@ -181,16 +187,20 @@ export class CollapsibleTreeComponent implements OnInit {
         const nodesTooltip = this.nodeGroupTooltip.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
 
+        const centerOfTheChart = this.height / 2;
         // Update tooltip position in the entire tree:
-        d3.select('svg#chartSvgContainer').select('g.tooltip-group')
-          .attr('transform', 'translate(' + this.tooltipPosition.left + ',' + (this.height / 2 - 25) + ')');
+        mainSvgSection.select('g.tooltip-group')
+          .attr('transform', 'translate(' + this.tooltipPosition.left + ',' + (centerOfTheChart - 25) + ')');
 
+        // Update context menu position in the entire tree:
+        mainSvgSection.select('g.context-group')
+          .attr('transform', 'translate(' + this.contextMenuPosition.xAxis + ',' + centerOfTheChart + ')');
         const nodesContextMenu = this.nodeGroupContextMenu.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
 
         // Adjust the margin top:
-        d3.select('svg#chartSvgContainer').select('g')
-        .attr('transform', 'translate(' + this.margin.left + ',' + this.height / 2 + ')');
+        mainSvgSection.select('g')
+        .attr('transform', 'translate(' + this.margin.left + ',' + centerOfTheChart + ')');
 
         const nodeEnter = node.enter().append('g')
           .attr('class', 'node')

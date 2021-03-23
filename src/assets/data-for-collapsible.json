@@ -394,7 +394,74 @@
     },
     {
       "name": "new node 58",
-      "value": 100
+      "value": 100,
+      "children": [
+        {
+          "name": "Eduardo3",
+          "value": 300,
+          "children": [
+            {
+              "name": "Eduardo4",
+              "value": 300,
+              "children": [
+                {
+                  "name": "Eduardo5",
+                  "value": 300,
+                  "children": [
+                    {
+                      "name": "Eduardo6",
+                      "value": 300,
+                      "children": [
+                        {
+                          "name": "Eduardo7",
+                          "value": 300,
+                          "children": [
+                            {
+                              "name": "Eduardo8",
+                              "value": 300,
+                              "children": [
+                                {
+                                  "name": "Eduardo9",
+                                  "value": 300,
+                                  "children": [
+                                    {
+                                      "name": "Eduardo10",
+                                      "value": 300,
+                                      "children": [
+                                        {
+                                          "name": "Eduardo11",
+                                          "value": 300,
+                                          "children": [
+                                            {
+                                              "name": "Eduardo11",
+                                              "value": 300,
+                                              "children": [
+                                                {
+                                                  "name": "Eduardo12",
+                                                  "value": 300,
+                                                  "children": []
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
