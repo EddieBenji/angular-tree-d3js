@@ -48,6 +48,8 @@ export class CollapsibleTreeComponent implements OnInit {
 
     links: any;
 
+    currentLeafNodeSelected: any;
+
     constructor() {
     }
 
@@ -136,9 +138,9 @@ export class CollapsibleTreeComponent implements OnInit {
         return node.clicked ? 'red' : '#fff';
     }
 
-    updateColorOfParents(node): void {
+    updateClickedValueOnParents(node, hardValue?: boolean): void {
         do {
-            node.clicked = !node.clicked;
+            node.clicked = hardValue !== undefined ? hardValue : !node.clicked;
             node = node.parent;
         } while (node);
     }
@@ -153,7 +155,13 @@ export class CollapsibleTreeComponent implements OnInit {
         return true;
     }
 
-    click = (mouseEvent, nodeData) => {
+    unselectOtherNodes(): void {
+        this.currentLeafNodeSelected.clicked = false;
+        this.updateClickedValueOnParents(this.currentLeafNodeSelected.parent, false);
+        this.currentLeafNodeSelected = undefined;
+    }
+
+    click(mouseEvent, nodeData): void {
         if (nodeData.children) {
             nodeData._children = nodeData.children;
             nodeData.children = null;
@@ -162,16 +170,21 @@ export class CollapsibleTreeComponent implements OnInit {
             nodeData._children = null;
         }
         const newClickedValue = !nodeData.clicked;
-        if (this.isLeafNode(nodeData) && this.areParentsSameAsNode(nodeData, newClickedValue)) {
+        if (this.isLeafNode(nodeData)) {
+            if (newClickedValue && this.currentLeafNodeSelected) {
+                // Unselect the other nodes as there is a new leaf node selected.
+                this.unselectOtherNodes();
+            }
+            this.currentLeafNodeSelected = nodeData;
             nodeData.clicked = newClickedValue;
             // change the color of all the parents as well.
-            this.updateColorOfParents(nodeData.parent);
+            this.updateClickedValueOnParents(nodeData.parent);
         }
         this.updateChart(nodeData);
         setTimeout(() => {
             this.hideOtherTooltipsIfAny();
         }, 500);
-    };
+    }
 
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
     collapseChildrenByParentNode(d): void {
