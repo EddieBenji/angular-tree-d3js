@@ -161,7 +161,7 @@ export class CollapsibleTreeComponent implements OnInit {
         this.currentLeafNodeSelected = undefined;
     }
 
-    click(mouseEvent, nodeData): void {
+    private collapseNode(nodeData): void {
         if (nodeData.children) {
             nodeData._children = nodeData.children;
             nodeData.children = null;
@@ -169,9 +169,12 @@ export class CollapsibleTreeComponent implements OnInit {
             nodeData.children = nodeData._children;
             nodeData._children = null;
         }
+    }
+
+    private updateClickedValueForNode(nodeData): void {
         const newClickedValue = !nodeData.clicked;
         if (this.isLeafNode(nodeData)) {
-            if (newClickedValue && this.currentLeafNodeSelected) {
+            if (newClickedValue && this.currentLeafNodeSelected && this.currentLeafNodeSelected.clicked) {
                 // Unselect the other nodes as there is a new leaf node selected.
                 this.unselectOtherNodes();
             }
@@ -180,6 +183,11 @@ export class CollapsibleTreeComponent implements OnInit {
             // change the color of all the parents as well.
             this.updateClickedValueOnParents(nodeData.parent);
         }
+    }
+
+    click(mouseEvent, nodeData): void {
+        this.collapseNode(nodeData);
+        this.updateClickedValueForNode(nodeData);
         this.updateChart(nodeData);
         setTimeout(() => {
             this.hideOtherTooltipsIfAny();
