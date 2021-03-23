@@ -162,17 +162,17 @@ export class CollapsibleTreeComponent implements OnInit {
         this.treeData = this.tree(this.root);
         this.nodes = this.treeData.descendants();
         this.links = this.treeData.descendants().slice(1);
+        let maxDepth = 1;
         this.nodes.forEach((d) => {
             d.y = d.depth * 180;
+            if (d.depth > maxDepth) {
+                maxDepth = d.depth;
+            }
         });
-
-        // for the first 2 levels, no need of recalculating the width. When we're at the 3rd level, then we will start recalculating the
-        // width.
-        const deepWidth = source.children ? (source.depth < 3 ? 0 : source.depth) : (source.depth < 3 ? 0 : source.depth - 1);
-        const width = deepWidth * 180 + this.chartContainer.nativeElement.offsetWidth;
+        this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         d3.select('svg#chartSvgContainer').transition()
           .duration(this.duration)
-          .attr('width', width);
+          .attr('width', this.width);
 
         const node = this.svg.selectAll('g.node')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
