@@ -24,7 +24,7 @@ export class CollapsibleTreeComponent implements OnInit {
     // Tooltip attributes:
     nodeGroupTooltip: any;
     tooltip = { width: 200, height: 24, textMargin: 5 };
-    tooltipPosition = { top: 500, left: -30 };
+    tooltipPosition = { top: 500, left: - 30 };
 
     // context menu attributes:
     nodeGroupContextMenu: any;
@@ -100,7 +100,6 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('class', 'context-group')
           .attr('transform', 'translate(' + this.contextMenuPosition.xAxis + ',' + this.contextMenuPosition.yAxis + ')');
 
-
         // close context menu if clicked outside of it.
         d3.select('body').on('click.context-menu-g', () => {
             d3.selectAll('.context-menu-g').style('display', 'none');
@@ -120,6 +119,40 @@ export class CollapsibleTreeComponent implements OnInit {
         this.nameFromContextMenu = d.data.name;
     }
 
+    isNodeCollapsed(node): boolean {
+        // node._children !== null and node._children !== undefined means the node was collapsed.
+        return node._children !== null && node._children !== undefined;
+    }
+
+    isLeafNode(node): boolean {
+        return (node.children === null || node.children === undefined) && (node._children === null || node._children === undefined);
+    }
+
+    fillColorForNode(node: any): string {
+        if (this.isNodeCollapsed(node)) {
+            return 'lightsteelblue';
+        }
+        // everytime a node is clicked, we set the attribute 'clicked' to true. Otherwise is false or undefined.
+        return node.clicked ? 'red' : '#fff';
+    }
+
+    updateColorOfParents(node): void {
+        do {
+            node.clicked = !node.clicked;
+            node = node.parent;
+        } while (node);
+    }
+
+    areParentsSameAsNode(node, valueToUpdate: boolean): boolean {
+        do {
+            if (node.clicked === valueToUpdate) {
+                return false;
+            }
+            node = node.parent;
+        } while (node);
+        return true;
+    }
+
     click = (mouseEvent, nodeData) => {
         if (nodeData.children) {
             nodeData._children = nodeData.children;
@@ -128,7 +161,12 @@ export class CollapsibleTreeComponent implements OnInit {
             nodeData.children = nodeData._children;
             nodeData._children = null;
         }
-        nodeData.clicked = !nodeData.clicked;
+        const newClickedValue = !nodeData.clicked;
+        if (this.isLeafNode(nodeData) && this.areParentsSameAsNode(nodeData, newClickedValue)) {
+            nodeData.clicked = newClickedValue;
+            // change the color of all the parents as well.
+            this.updateColorOfParents(nodeData.parent);
+        }
         this.updateChart(nodeData);
         setTimeout(() => {
             this.hideOtherTooltipsIfAny();
@@ -144,15 +182,6 @@ export class CollapsibleTreeComponent implements OnInit {
             d._children = d.children;
             d.children = null;
         }
-    }
-
-    fillColorForNode(node: any): string {
-        // node._children !== null means the node was collapsed.
-        if (node._children !== null && node._children !== undefined) {
-            return 'lightsteelblue';
-        }
-        // everytime a node is clicked, we set the attribute 'clicked' to true. Otherwise is false or undefined.
-        return node.clicked ? 'red' : '#fff';
     }
 
     updateChart(source): void {
@@ -203,7 +232,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
         // Adjust the margin top:
         mainSvgSection.select('g')
-        .attr('transform', 'translate(' + this.margin.left + ',' + centerOfTheChart + ')');
+          .attr('transform', 'translate(' + this.margin.left + ',' + centerOfTheChart + ')');
 
         const nodeEnter = node.enter().append('g')
           .attr('class', 'node')
@@ -214,7 +243,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .on('mousemove', this.mousemove.bind(this))
           .on('mouseout', this.mouseout.bind(this))
           .on('contextmenu', this.contextmenu.bind(this))
-          .on('click', this.click);
+          .on('click', this.click.bind(this));
 
         const nodeEnterTooltip = nodesTooltip.enter().append('g')
           .attr('class', 'tooltip-g')
@@ -248,7 +277,7 @@ export class CollapsibleTreeComponent implements OnInit {
               return d.children || d._children ? 'end' : 'start';
           })
           .style('font', '12px sans-serif');
-          // .text((d) => d.data.name);
+        // .text((d) => d.data.name);
 
         // Tooltip group
         nodeEnterTooltip.append('rect')
@@ -342,7 +371,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('r', 10)
           .style('stroke-width', '3px')
           .style('stroke', 'steelblue')
-          .style('fill', this.fillColorForNode)
+          .style('fill', this.fillColorForNode.bind(this))
           .attr('cursor', 'pointer');
 
         const nodeExit = node.exit().transition()
