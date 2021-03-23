@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
+import * as dataJson from '../../assets/data-for-collapsible.json';
 
 interface HierarchyDatum {
     name: string;
@@ -7,76 +8,7 @@ interface HierarchyDatum {
     children?: Array<HierarchyDatum>;
 }
 
-const data: HierarchyDatum = {
-    name: 'A1',
-    value: 100,
-    children: [
-        {
-            name: 'B1',
-            value: 100,
-            children: [
-                {
-                    name: 'C1',
-                    value: 100,
-                    children: undefined
-                },
-                {
-                    name: 'C2',
-                    value: 300,
-                    children: [
-                        {
-                            name: 'D1',
-                            value: 100,
-                            children: undefined
-                        },
-                        {
-                            name: 'D2',
-                            value: 300,
-                            children: undefined
-                        }
-                    ]
-                },
-                {
-                    name: 'C3',
-                    value: 200,
-                    children: undefined
-                }
-            ]
-        },
-        {
-            name: 'B2',
-            value: 200,
-            children: [
-                {
-                    name: 'C4',
-                    value: 100,
-                    children: undefined
-                },
-                {
-                    name: 'C5',
-                    value: 300,
-                    children: undefined
-                },
-                {
-                    name: 'C6',
-                    value: 200,
-                    children: [
-                        {
-                            name: 'D3',
-                            value: 100,
-                            children: undefined
-                        },
-                        {
-                            name: 'D4',
-                            value: 300,
-                            children: undefined
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
-};
+const data: HierarchyDatum = (dataJson as any).default;
 
 @Component({
     selector: 'app-collapsible-tree',
@@ -94,7 +26,7 @@ export class CollapsibleTreeComponent implements OnInit {
     // Tooltip attributes:
     nodeGroupTooltip: any;
     tooltip = { width: 200, height: 24, textMargin: 5 };
-    tooltipPosition = { top: 170, left: - 50 };
+    tooltipPosition = { top: 170, left: 0 };
 
     // context menu attributes:
     nodeGroupContextMenu: any;
@@ -108,10 +40,10 @@ export class CollapsibleTreeComponent implements OnInit {
     margin: any = { top: 200, bottom: 90, left: 100, right: 90 };
     duration = 500;
     nodeWidth = 5;
-    nodeHeight = 5;
-    nodeRadius = 5;
-    horizontalSeparationBetweenNodes = 5;
-    verticalSeparationBetweenNodes = 5;
+    nodeHeight = 1;
+    nodeRadius = 1;
+    horizontalSeparationBetweenNodes = 1;
+    verticalSeparationBetweenNodes = 1;
 
     dragStarted: boolean;
     draggingNode: any;
@@ -179,10 +111,11 @@ export class CollapsibleTreeComponent implements OnInit {
         });
 
         // Assigns parent, children, height, depth
-        this.root = d3.hierarchy(data, (d) => d.children);
+        this.root = d3.hierarchy(data);
         this.root.x0 = this.height / 2;
         this.root.y0 = 10;
 
+        // this.collapseChildrenByParentNode(this.root);
         this.updateChart(this.root);
 
     }
@@ -199,8 +132,30 @@ export class CollapsibleTreeComponent implements OnInit {
             nodeData.children = nodeData._children;
             nodeData._children = null;
         }
+        // If the node has a parent, then collapse its child nodes except for this clicked node.
+        // if (nodeData.parent) {
+        //     nodeData.parent.children.forEach((element) => {
+        //         if (nodeData.data.name !== element.data.name) {
+        //             this.collapseChildrenByParentNode(element);
+        //         }
+        //     });
+        // }
         this.updateChart(nodeData);
+        setTimeout(() => {
+            this.hideOtherTooltipsIfAny();
+        }, 500);
     };
+
+    // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
+    collapseChildrenByParentNode(d): void {
+        if (d.children) {
+            d.children.forEach((c): void => {
+                this.collapseChildrenByParentNode(c);
+            });
+            d._children = d.children;
+            d.children = null;
+        }
+    }
 
     updateChart(source): void {
         let i = 0;
@@ -210,6 +165,14 @@ export class CollapsibleTreeComponent implements OnInit {
         this.nodes.forEach((d) => {
             d.y = d.depth * 180;
         });
+
+        // for the first 2 levels, no need of recalculating the width. When we're at the 3rd level, then we will start recalculating the
+        // width.
+        const deepWidth = source.children ? (source.depth < 3 ? 0 : source.depth) : (source.depth < 3 ? 0 : source.depth - 1);
+        const width = deepWidth * 180 + this.chartContainer.nativeElement.offsetWidth;
+        d3.select('svg#chartSvgContainer').transition()
+          .duration(this.duration)
+          .attr('width', width);
 
         const node = this.svg.selectAll('g.node')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
