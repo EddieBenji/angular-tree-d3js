@@ -86,7 +86,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
         // declares a tree layout and assigns the size
         this.tree = d3.tree()
-          // .size([ this.height, this.width ])
+          .size([ this.height, this.width ])
           .nodeSize([ this.nodeWidth + this.horizontalSeparationBetweenNodes, this.nodeHeight + this.verticalSeparationBetweenNodes ])
           .separation((a, b) => a.parent === b.parent ? 5 : 10);
 
