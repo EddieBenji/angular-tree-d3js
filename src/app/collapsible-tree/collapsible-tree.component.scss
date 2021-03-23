@@ -1,11 +1,28 @@
+.note {
+  font-style: italic;
+}
+
+.show-section {
+  visibility: visible;
+}
+
+.hide-section {
+  visibility: hidden;
+}
+
+.selected-node-summary {
+  font-style: oblique;
+}
+
 .d3-chart {
   width: 100%;
-  min-height:600px;
+  min-height: 600px;
   border: 1px solid gray;
   overflow-y: scroll;
   overflow-x: scroll;
   max-height: 800px;
 }
+
 .node circle {
   fill: #fff;
   stroke: steelblue;
@@ -25,23 +42,26 @@
 .active {
   stroke-width: 1px !important;
 }
-.selected text{
+
+.selected text {
   stroke-width: 2px !important;
   fill: #0f0;
 }
 
-.ghostCircle.show{
-  display:block;
+.ghostCircle.show {
+  display: block;
 }
-.ghostCircle.over{
+
+.ghostCircle.over {
   fill: green !important;
   stroke: steelblue;
   stroke-width: 0.2px;
 }
 
-.ghostCircle, .active .ghostCircle{
+.ghostCircle, .active .ghostCircle {
   display: none;
 }
+
 .templink {
   fill: none;
   stroke: red;

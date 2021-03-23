@@ -16,12 +16,10 @@ const data: HierarchyDatum = (dataJson as any).default;
     styleUrls: [ './collapsible-tree.component.scss' ]
 })
 export class CollapsibleTreeComponent implements OnInit {
-    title = 'd3tree';
     @ViewChild('chart', { static: true }) private chartContainer: ElementRef;
 
     root: any;
     tree: any;
-    treeLayout: any;
     svg: any;
     // Tooltip attributes:
     nodeGroupTooltip: any;
@@ -46,11 +44,8 @@ export class CollapsibleTreeComponent implements OnInit {
     verticalSeparationBetweenNodes = 1;
     nodeHeightAfterBeingRendered = 20;
 
-    dragStarted: boolean;
-    draggingNode: any;
     nodes: any[];
 
-    selectedNodeByClick: any;
     links: any;
 
     constructor() {
@@ -133,14 +128,7 @@ export class CollapsibleTreeComponent implements OnInit {
             nodeData.children = nodeData._children;
             nodeData._children = null;
         }
-        // If the node has a parent, then collapse its child nodes except for this clicked node.
-        // if (nodeData.parent) {
-        //     nodeData.parent.children.forEach((element) => {
-        //         if (nodeData.data.name !== element.data.name) {
-        //             this.collapseChildrenByParentNode(element);
-        //         }
-        //     });
-        // }
+        nodeData.clicked = !nodeData.clicked;
         this.updateChart(nodeData);
         setTimeout(() => {
             this.hideOtherTooltipsIfAny();
@@ -156,6 +144,15 @@ export class CollapsibleTreeComponent implements OnInit {
             d._children = d.children;
             d.children = null;
         }
+    }
+
+    fillColorForNode(node: any): string {
+        // node._children !== null means the node was collapsed.
+        if (node._children !== null && node._children !== undefined) {
+            return 'lightsteelblue';
+        }
+        // everytime a node is clicked, we set the attribute 'clicked' to true. Otherwise is false or undefined.
+        return node.clicked ? 'red' : '#fff';
     }
 
     updateChart(source): void {
@@ -345,9 +342,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('r', 10)
           .style('stroke-width', '3px')
           .style('stroke', 'steelblue')
-          .style('fill', (d) => {
-              return d._children ? 'lightsteelblue' : '#fff';
-          })
+          .style('fill', this.fillColorForNode)
           .attr('cursor', 'pointer');
 
         const nodeExit = node.exit().transition()
