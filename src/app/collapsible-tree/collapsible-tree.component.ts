@@ -26,12 +26,12 @@ export class CollapsibleTreeComponent implements OnInit {
     // Tooltip attributes:
     nodeGroupTooltip: any;
     tooltip = { width: 200, height: 24, textMargin: 5 };
-    tooltipPosition = { top: 170, left: 0 };
+    tooltipPosition = { top: 500, left: -30 };
 
     // context menu attributes:
     nodeGroupContextMenu: any;
     nameFromContextMenu: string;
-    contextMenuPosition = { xAxis: 0, yAxis: 200 };
+    contextMenuPosition = { xAxis: 0, yAxis: 500 };
 
     treeData: any;
 
@@ -76,12 +76,12 @@ export class CollapsibleTreeComponent implements OnInit {
     renderTreeChart(): void {
 
         const element: any = this.chartContainer.nativeElement;
-        this.width = element.offsetWidth + this.margin.left + this.margin.right;
-        this.height = element.offsetHeight + this.margin.top + this.margin.bottom;
+        this.width = element.offsetWidth - this.margin.left - this.margin.right;
+        this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
 
         this.svg = d3.select(element).append('svg')
-          // .attr('width', element.offsetWidth)
-          // .attr('height', element.offsetHeight)
+          .attr('width', element.offsetWidth)
+          .attr('height', element.offsetHeight)
           .attr('id', 'chartSvgContainer')
           .append('g')
           .attr('class', 'nodes')
@@ -180,6 +180,10 @@ export class CollapsibleTreeComponent implements OnInit {
 
         const nodesTooltip = this.nodeGroupTooltip.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
+
+        // Update tooltip position in the entire tree:
+        d3.select('svg#chartSvgContainer').select('g.tooltip-group')
+          .attr('transform', 'translate(' + this.tooltipPosition.left + ',' + (this.height / 2 - 25) + ')');
 
         const nodesContextMenu = this.nodeGroupContextMenu.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
