@@ -202,7 +202,7 @@ export class CollapsibleTreeComponent implements OnInit {
             multiplicationFactor = 0;
             this.height = 0;
         }
-        const rawNodeHeights = multiplicationFactor * this.nodeHeightAfterBeingRendered * 1.3;
+        const rawNodeHeights = multiplicationFactor * this.nodeHeightAfterBeingRendered * 1.5;
         // consider also the height of the context menu, so for the last leaf node it gets rendered:
         this.height = Math.max(this.height, rawNodeHeights + this.margin.top + this.margin.bottom + this.heightOfContextMenu);
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
