@@ -37,11 +37,10 @@ export class CollapsibleTreeComponent implements OnInit {
 
     height: number;
     width: number;
-    margin: any = { top: 200, bottom: 90, left: 100, right: 90 };
+    margin: any = { top: 300, bottom: 90, left: 100, right: 90 };
     duration = 500;
     nodeWidth = 5;
     nodeHeight = 1;
-    nodeRadius = 1;
     horizontalSeparationBetweenNodes = 1;
     verticalSeparationBetweenNodes = 1;
 
@@ -77,12 +76,12 @@ export class CollapsibleTreeComponent implements OnInit {
     renderTreeChart(): void {
 
         const element: any = this.chartContainer.nativeElement;
-        this.width = element.offsetWidth - this.margin.left - this.margin.right;
-        this.height = element.offsetHeight - this.margin.top - this.margin.bottom;
+        this.width = element.offsetWidth + this.margin.left + this.margin.right;
+        this.height = element.offsetHeight + this.margin.top + this.margin.bottom;
 
         this.svg = d3.select(element).append('svg')
-          .attr('width', element.offsetWidth)
-          .attr('height', element.offsetHeight)
+          // .attr('width', element.offsetWidth)
+          // .attr('height', element.offsetHeight)
           .attr('id', 'chartSvgContainer')
           .append('g')
           .attr('class', 'nodes')
@@ -90,7 +89,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
         // declares a tree layout and assigns the size
         this.tree = d3.tree()
-          .size([ this.height, this.width ])
+          // .size([ this.height, this.width ])
           .nodeSize([ this.nodeWidth + this.horizontalSeparationBetweenNodes, this.nodeHeight + this.verticalSeparationBetweenNodes ])
           .separation((a, b) => a.parent === b.parent ? 5 : 10);
 
@@ -169,10 +168,12 @@ export class CollapsibleTreeComponent implements OnInit {
                 maxDepth = d.depth;
             }
         });
+        this.height = Math.max(this.height, (this.nodes.length * 20) + this.margin.top + this.margin.bottom);
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         d3.select('svg#chartSvgContainer').transition()
           .duration(this.duration)
-          .attr('width', this.width);
+          .attr('width', this.width)
+          .attr('height', this.height);
 
         const node = this.svg.selectAll('g.node')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
@@ -182,6 +183,10 @@ export class CollapsibleTreeComponent implements OnInit {
 
         const nodesContextMenu = this.nodeGroupContextMenu.selectAll('g')
           .data(this.nodes, (d) => d.id || (d.id = ++ i));
+
+        // Adjust the margin top:
+        d3.select('svg#chartSvgContainer').select('g')
+        .attr('transform', 'translate(' + this.margin.left + ',' + this.height / 2 + ')');
 
         const nodeEnter = node.enter().append('g')
           .attr('class', 'node')
