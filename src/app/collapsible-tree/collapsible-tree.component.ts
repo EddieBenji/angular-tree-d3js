@@ -106,6 +106,9 @@ export class CollapsibleTreeComponent implements OnInit {
         // close context menu if clicked outside of it.
         d3.select('body').on('click.context-menu-g', (a) => {
             const visibleContextMenu = d3.select('.context-menu-g.context-menu-g-show');
+            if (!visibleContextMenu || !visibleContextMenu.node()) {
+                return;
+            }
             this.height -= (visibleContextMenu.node() as any).getBBox().height;
             this.updateHeightOfMainSelection();
             visibleContextMenu.classed('context-menu-g-show', false);
@@ -222,7 +225,7 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     private getMultiplicationFactorForRootNode(nodeData: any): number {
-        let multiplicationFactor = mockData.children.length;
+        let multiplicationFactor = mockData.children ? mockData.children.length : 0;
         if (this.root.id === nodeData.id && !this.root.children) {
             // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
             multiplicationFactor = 0;
@@ -252,7 +255,7 @@ export class CollapsibleTreeComponent implements OnInit {
         });
         // consider also the height of the context menu, so for the last leaf node it gets rendered:
         this.height = Math.max(this.height, this.getRawNodeHeights(source) + this.margin.top + this.margin.bottom);
-        this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
+        this.width = (maxDepth - 4) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         const mainSvgSection = d3.select('svg#chartSvgContainer');
 
         mainSvgSection.transition()
