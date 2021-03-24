@@ -2,13 +2,15 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 import * as dataJson from '../../assets/data-for-collapsible.json';
 
-interface HierarchyDatum {
+interface HierarchyRuleDatum {
+    id: number;
     name: string;
-    value: number;
-    children?: Array<HierarchyDatum>;
+    pattern: string;
+    rulePattern: string[];
+    children?: Array<HierarchyRuleDatum>;
 }
 
-const data: HierarchyDatum = (dataJson as any).default;
+const mockData: HierarchyRuleDatum = (dataJson as any).default;
 
 @Component({
     selector: 'app-collapsible-tree',
@@ -108,7 +110,7 @@ export class CollapsibleTreeComponent implements OnInit {
         });
 
         // Assigns parent, children, height, depth
-        this.root = d3.hierarchy(data);
+        this.root = d3.hierarchy(mockData);
         this.root.x0 = this.height / 2;
         this.root.y0 = 10;
 
@@ -139,19 +141,19 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     updateClickedValueOnParents(node, hardValue?: boolean): void {
-        do {
+        while (node) {
             node.clicked = hardValue !== undefined ? hardValue : !node.clicked;
             node = node.parent;
-        } while (node);
+        }
     }
 
     areParentsSameAsNode(node, valueToUpdate: boolean): boolean {
-        do {
+        while (node) {
             if (node.clicked === valueToUpdate) {
                 return false;
             }
             node = node.parent;
-        } while (node);
+        }
         return true;
     }
 
@@ -185,7 +187,7 @@ export class CollapsibleTreeComponent implements OnInit {
         }
     }
 
-    click(mouseEvent, nodeData): void {
+    click(mouseEvent, nodeData: d3.HierarchyNode<any>): void {
         this.collapseNode(nodeData);
         this.updateClickedValueForNode(nodeData);
         this.updateChart(nodeData);
@@ -217,7 +219,7 @@ export class CollapsibleTreeComponent implements OnInit {
                 maxDepth = d.depth;
             }
         });
-        let multiplicationFactor = data.children.length;
+        let multiplicationFactor = mockData.children.length;
         if (this.root.id === source.id && !this.root.children) {
             // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
             multiplicationFactor = 0;
@@ -345,7 +347,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('y', - 12)
           .attr('rx', 12)
           .attr('width', 250)
-          .attr('height', 200)
+          .attr('height', 150)
           .attr('class', 'context-menu-rect')
           .attr('data-type', 'contextMenu')
           .style('fill-opacity', 1);
@@ -362,7 +364,7 @@ export class CollapsibleTreeComponent implements OnInit {
           // property from this component.
           .style('fill', '#000')
           .text((d: any) => {
-              return d.data.name;
+              return `Rule ID: ${d.data.id}`;
           });
 
         nodeEnterContextMenu.append('foreignObject')
@@ -371,13 +373,13 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('width', 220)
           .attr('height', 200)
           .attr('data-type', 'contextMenu')
-          .append('xhtml').html((d) => {
+          .append('xhtml').html(({ data }) => {
             return '<div class="node-text wordwrap" data-type="contextMenu">'
               + '<div class="divider" data-type="contextMenu"></div>'
-              + '<div data-type="contextMenu" class="menu-heading"><b data-type="contextMenu">Heading</b></div>'
-              + '<div data-type="contextMenu" class="menu-content">Content <span data-type="contextMenu">--</span></div>'
-              + '<div data-type="contextMenu" class="menu-sub-content">Content <span data-type="contextMenu">'
-              + '</div>';
+              // + '<div data-type="contextMenu" class="menu-heading"><b data-type="contextMenu">' + data.id + '</b></div>'
+              + '<div data-type="contextMenu" class="menu-content"><b>Pattern:</b> <span data-type="contextMenu">' + data.pattern + '</span></div>'
+              + '<div data-type="contextMenu" class="menu-sub-content"><b>Rule Pattern:</b> <span data-type="contextMenu">' +
+              data.rulePattern.join(',') + '</div>';
         });
 
         const nodeUpdate = nodeEnter.merge(node);
