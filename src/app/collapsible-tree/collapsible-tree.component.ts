@@ -105,13 +105,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
         // close context menu if clicked outside of it.
         d3.select('body').on('click.context-menu-g', (a) => {
-            const visibleContextMenu = d3.select('.context-menu-g.context-menu-g-show');
-            if (!visibleContextMenu || !visibleContextMenu.node()) {
-                return;
-            }
-            this.height -= (visibleContextMenu.node() as any).getBBox().height;
-            this.updateHeightOfMainSelection();
-            visibleContextMenu.classed('context-menu-g-show', false);
+            this.verifyAndCloseContextMenuIfAny();
         });
 
         // Assigns parent, children, height, depth
@@ -122,6 +116,28 @@ export class CollapsibleTreeComponent implements OnInit {
         // this.collapseChildrenByParentNode(this.root);
         this.updateChart(this.root);
 
+    }
+
+    getOpenedContextMenuIfAny(): any {
+        return d3.select('.context-menu-g.context-menu-g-show');
+    }
+
+    isAnyContextMenuOpen(visibleMenu): boolean {
+        return visibleMenu !== undefined && visibleMenu !== null &&
+          visibleMenu.node() !== undefined && visibleMenu.node() !== null;
+    }
+
+    private closeContextMenu(visibleContextMenu): void {
+        this.height -= (visibleContextMenu.node() as any).getBBox().height;
+        this.updateHeightOfMainSelection();
+        visibleContextMenu.classed('context-menu-g-show', false);
+    }
+
+    private verifyAndCloseContextMenuIfAny(): void {
+        const openedContextMenu = this.getOpenedContextMenuIfAny();
+        if (this.isAnyContextMenuOpen(openedContextMenu)) {
+            this.closeContextMenu(openedContextMenu);
+        }
     }
 
     getSelectedItem(mouseEvent, d): void {
@@ -195,6 +211,7 @@ export class CollapsibleTreeComponent implements OnInit {
     click(mouseEvent, nodeData: d3.HierarchyNode<any>): void {
         this.collapseNode(nodeData);
         this.updateClickedValueForNode(nodeData);
+        this.verifyAndCloseContextMenuIfAny(); // This is necessary here in order to avoid strange behavior with the vertical bar.
         this.updateChart(nodeData);
         setTimeout(() => {
             this.hideOtherTooltipsIfAny();
