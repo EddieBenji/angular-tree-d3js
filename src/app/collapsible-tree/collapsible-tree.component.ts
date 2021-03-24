@@ -4,7 +4,6 @@ import * as dataJson from '../../assets/data-for-collapsible.json';
 
 interface HierarchyRuleDatum {
     id: number;
-    name: string;
     pattern: string;
     rulePattern: string[];
     children?: Array<HierarchyRuleDatum>;

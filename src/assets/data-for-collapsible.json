@@ -1,6 +1,5 @@
 {
   "id": 1,
-  "name": "A1",
   "pattern": "\\A(?:<\\d+>\\s*)?",
   "rulePattern": [
     "some",
@@ -10,26 +9,22 @@
   "children": [
     {
       "id": 2,
-      "name": "B1",
       "pattern": "\\A.*?MSWinEventLog\\t",
       "rulePattern": [
       ],
       "children": [
         {
           "id": 3,
-          "name": "C1",
           "pattern": "(?<a1>\\A[^\\t]*)",
           "rulePattern": []
         },
         {
           "id": 4,
-          "name": "C2",
           "pattern": "\\A(?:<\\d+>\\s*)?",
           "rulePattern": [],
           "children": [
             {
               "id": 5,
-              "name": "D1",
               "pattern": "\\A(?:<\\d+>\\s*)?",
               "rulePattern": [
                 "some",
@@ -39,7 +34,6 @@
             },
             {
               "id": 6,
-              "name": "D2",
               "pattern": "\\A(?:<\\d+>\\s*)?",
               "rulePattern": [
                 "some",
@@ -51,7 +45,6 @@
         },
         {
           "id": 7,
-          "name": "C3",
           "pattern": "\\A(?:<\\d+>\\s*)?",
           "rulePattern": []
         }
@@ -59,7 +52,6 @@
     },
     {
       "id": 8,
-      "name": "B2",
       "pattern": "\\A(?:<\\d+>\\s*)?",
       "rulePattern": [
       ],
@@ -100,35 +92,30 @@
     },
     {
       "id": 14,
-      "name": "B3",
       "pattern": "\\A(?:<\\d+>\\s*)?",
       "rulePattern": [
       ],
       "children": [
         {
           "id": 15,
-          "name": "C7",
           "pattern": "\\A(?:<\\d+>\\s*)?",
           "rulePattern": [
           ],
           "children": [
             {
               "id": 16,
-              "name": "D5",
               "pattern": "\\A(?:<\\d+>\\s*)?",
               "rulePattern": [
               ],
               "children": [
                 {
                   "id": 17,
-                  "name": "E1",
                   "pattern": "\\A(?:<\\d+>\\s*)?",
                   "rulePattern": [
                   ],
                   "children": [
                     {
                       "id": 18,
-                      "name": "F1",
                       "pattern": "\\A(?:<\\d+>\\s*)?",
                       "rulePattern": [
                       ],
