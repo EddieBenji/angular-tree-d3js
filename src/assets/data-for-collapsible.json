@@ -2,39 +2,9 @@
   "id": 1,
   "pattern": "\\A(?:<\\d+>\\s*)?",
   "rulePattern": [
-    "some",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "thing",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "new",
-    "Eduardo"
+    "1300000",
+    "1300001",
+    "1300003"
   ],
   "children": [
     {
@@ -57,18 +27,18 @@
               "id": 5,
               "pattern": "\\A(?:<\\d+>\\s*)?",
               "rulePattern": [
-                "some",
-                "thing",
-                "again"
+                "1300001",
+                "1300002",
+                "1300003"
               ]
             },
             {
               "id": 6,
               "pattern": "\\A(?:<\\d+>\\s*)?",
               "rulePattern": [
-                "some",
-                "thing",
-                "again"
+                "1300005",
+                "1300006",
+                "1300007"
               ]
             }
           ]
