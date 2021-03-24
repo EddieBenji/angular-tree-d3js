@@ -107,10 +107,7 @@ export class CollapsibleTreeComponent implements OnInit {
         d3.select('body').on('click.context-menu-g', (a) => {
             const visibleContextMenu = d3.select('.context-menu-g.context-menu-g-show');
             this.height -= (visibleContextMenu.node() as any).getBBox().height;
-            d3.select('svg#chartSvgContainer')
-              .transition()
-              .duration(this.duration)
-              .attr('height', this.height);
+            this.updateHeightOfMainSelection();
             visibleContextMenu.classed('context-menu-g-show', false);
         });
 
@@ -218,6 +215,27 @@ export class CollapsibleTreeComponent implements OnInit {
             return `${data.pattern.toString().slice(0, maxLength)}...`;
         }
         return data.pattern;
+    }
+
+    private getRawNodeHeights(nodeData: any): number {
+        return this.getMultiplicationFactorForRootNode(nodeData) * this.nodeHeightAfterBeingRendered * 1.5;
+    }
+
+    private getMultiplicationFactorForRootNode(nodeData: any): number {
+        let multiplicationFactor = mockData.children.length;
+        if (this.root.id === nodeData.id && !this.root.children) {
+            // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
+            multiplicationFactor = 0;
+            this.height = 0;
+        }
+        return multiplicationFactor;
+    }
+
+    private updateHeightOfMainSelection(): void {
+        d3.select('svg#chartSvgContainer')
+          .transition()
+          .duration(this.duration)
+          .attr('height', this.height);
     }
 
     updateChart(source): void {
@@ -503,7 +521,7 @@ export class CollapsibleTreeComponent implements OnInit {
         d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
     }
 
-    mouseout(mouseEvent, d): void {
+    mouseout(): void {
         d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
         d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
     }
@@ -527,23 +545,6 @@ export class CollapsibleTreeComponent implements OnInit {
             return;
         }
         this.height = possibleNewHeight;
-        d3.select('svg#chartSvgContainer')
-          .transition()
-          .duration(this.duration)
-          .attr('height', this.height);
-    }
-
-    private getRawNodeHeights(nodeData: any): number {
-        return this.getMultiplicationFactorForRootNode(nodeData) * this.nodeHeightAfterBeingRendered * 1.5;
-    }
-
-    private getMultiplicationFactorForRootNode(nodeData: any): number {
-        let multiplicationFactor = mockData.children.length;
-        if (this.root.id === nodeData.id && !this.root.children) {
-            // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
-            multiplicationFactor = 0;
-            this.height = 0;
-        }
-        return multiplicationFactor;
+        this.updateHeightOfMainSelection();
     }
 }
