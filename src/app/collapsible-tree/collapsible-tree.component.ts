@@ -120,7 +120,7 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     getSelectedItem(mouseEvent, d): void {
-        this.nameFromContextMenu = d.data.name;
+        this.nameFromContextMenu = d.data.pattern;
     }
 
     isNodeCollapsed(node): boolean {
@@ -205,6 +205,14 @@ export class CollapsibleTreeComponent implements OnInit {
             d._children = d.children;
             d.children = null;
         }
+    }
+
+    getTooltipValue(data: HierarchyRuleDatum): string {
+        const maxLength = 20;
+        if (data.pattern.length > maxLength) {
+            return `${data.pattern.toString().slice(0, maxLength)}...`;
+        }
+        return data.pattern;
     }
 
     updateChart(source): void {
@@ -300,7 +308,7 @@ export class CollapsibleTreeComponent implements OnInit {
               return d.children || d._children ? 'end' : 'start';
           })
           .style('font', '12px sans-serif');
-        // .text((d) => d.data.name);
+        // .text((d) => d.data.pattern);
 
         // Tooltip group
         nodeEnterTooltip.append('rect')
@@ -315,10 +323,10 @@ export class CollapsibleTreeComponent implements OnInit {
               container.append('text')
                 .attr('x', - 99999)
                 .attr('y', - 99999)
-                .text(`${d.data.name.toString()}--`);
+                .text(this.getTooltipValue(d.data));
               const size = container.node().getBBox();
               container.remove();
-              return size.width;
+              return size.width * .9; // TODO: need to check if this value is good enough.
           })
           .attr('height', this.tooltip.height)
           .attr('class', 'tooltip-rect')
@@ -335,7 +343,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('visibility', 'hidden')
           .append('tspan')
           .text((d: any) => {
-              return d.data.name;
+              return this.getTooltipValue(d.data);
           });
 
         // ContextMenu group
