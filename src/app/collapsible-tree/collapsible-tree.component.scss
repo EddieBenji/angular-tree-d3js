@@ -107,9 +107,19 @@
   fill: #000;
 }
 
-::ng-deep .context-menu-g .context-menu-title {
-  font-weight: bold;
-  cursor: pointer;
+::ng-deep .context-menu-g {
+  &.context-menu-g-show {
+    display: block !important;
+  }
+
+  &.context-menu-g-hide {
+    display: none !important;
+  }
+
+  .context-menu-title {
+    font-weight: bold;
+    cursor: pointer;
+  }
 }
 
 ::ng-deep .link {
@@ -149,4 +159,8 @@
 
 ::ng-deep .menu-content span, ::ng-deep .menu-sub-content span {
   margin-left: 2px;
+
+  &.pattern-value {
+    margin-left: 10px;
+  }
 }

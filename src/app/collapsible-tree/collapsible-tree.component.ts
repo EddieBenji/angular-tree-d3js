@@ -104,8 +104,14 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('transform', 'translate(' + this.contextMenuPosition.xAxis + ',' + this.contextMenuPosition.yAxis + ')');
 
         // close context menu if clicked outside of it.
-        d3.select('body').on('click.context-menu-g', () => {
-            d3.selectAll('.context-menu-g').style('display', 'none');
+        d3.select('body').on('click.context-menu-g', (a) => {
+            const visibleContextMenu = d3.select('.context-menu-g.context-menu-g-show');
+            this.height -= (visibleContextMenu.node() as any).getBBox().height;
+            d3.select('svg#chartSvgContainer')
+              .transition()
+              .duration(this.duration)
+              .attr('height', this.height);
+            visibleContextMenu.classed('context-menu-g-show', false);
         });
 
         // Assigns parent, children, height, depth
@@ -226,15 +232,8 @@ export class CollapsibleTreeComponent implements OnInit {
                 maxDepth = d.depth;
             }
         });
-        let multiplicationFactor = mockData.children.length;
-        if (this.root.id === source.id && !this.root.children) {
-            // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
-            multiplicationFactor = 0;
-            this.height = 0;
-        }
-        const rawNodeHeights = multiplicationFactor * this.nodeHeightAfterBeingRendered * 1.5;
         // consider also the height of the context menu, so for the last leaf node it gets rendered:
-        this.height = Math.max(this.height, rawNodeHeights + this.margin.top + this.margin.bottom + this.heightOfContextMenu);
+        this.height = Math.max(this.height, this.getRawNodeHeights(source) + this.margin.top + this.margin.bottom);
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         const mainSvgSection = d3.select('svg#chartSvgContainer');
 
@@ -354,7 +353,9 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('y', - 12)
           .attr('rx', 12)
           .attr('width', 250)
-          .attr('height', 150)
+          .attr('height', (nodeWithData) => {
+              return nodeWithData?.data?.rulePattern?.length > 0 ? nodeWithData.data.rulePattern.length * 14 + 150 : 150;
+          })
           .attr('class', 'context-menu-rect')
           .attr('data-type', 'contextMenu')
           .style('fill-opacity', 1);
@@ -378,15 +379,21 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('x', 135)
           .attr('y', 18)
           .attr('width', 220)
-          .attr('height', 200)
+          .attr('height', (nodeWithData) => {
+              return nodeWithData?.data?.rulePattern?.length > 0 ? nodeWithData.data.rulePattern.length * 14 + 200 : 200;
+          })
           .attr('data-type', 'contextMenu')
           .append('xhtml').html(({ data }) => {
+            const { rulePattern } = data as HierarchyRuleDatum;
+            let rulePatterHtml = '';
+            for (const pattern of rulePattern) {
+                rulePatterHtml += `<div data-type="contextMenu" class="menu-sub-content"><span class="pattern-value">${pattern}</span></div>`;
+            }
             return '<div class="node-text wordwrap" data-type="contextMenu">'
               + '<div class="divider" data-type="contextMenu"></div>'
               // + '<div data-type="contextMenu" class="menu-heading"><b data-type="contextMenu">' + data.id + '</b></div>'
               + '<div data-type="contextMenu" class="menu-content"><b>Pattern:</b> <span data-type="contextMenu">' + data.pattern + '</span></div>'
-              + '<div data-type="contextMenu" class="menu-sub-content"><b>Rule Pattern:</b> <span data-type="contextMenu">' +
-              data.rulePattern.join(',') + '</div>';
+              + '<div data-type="contextMenu" class="menu-sub-content"><b>Rule Pattern</b></div>' + rulePatterHtml;
         });
 
         const nodeUpdate = nodeEnter.merge(node);
@@ -502,6 +509,7 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     contextmenu(mouseEvent, nodeData: any): void {
+        mouseEvent.preventDefault();
         const contextMenu = d3.selectAll('.context-menu-g');
         contextMenu.transition()
           .duration(this.duration)
@@ -509,9 +517,33 @@ export class CollapsibleTreeComponent implements OnInit {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
 
-        d3.selectAll('.context-menu-g').style('display', 'none');
-        d3.select('#nodeContextMenuGroup' + nodeData.id).style('display', 'block');
-        mouseEvent.preventDefault();
+        d3.selectAll('.context-menu-g').classed('context-menu-g-show', false);
+        d3.select('#nodeContextMenuGroup' + nodeData.id).classed('context-menu-g-show', true);
+        // In the context menu, we can show multiple rule patterns, therefore, we should update the height if needed.
+        const contextMenuHeight = nodeData.data.rulePattern?.length > 0 ? nodeData.data.rulePattern.length * 14 + 150 : 150;
+        const possibleNewHeight = this.getRawNodeHeights(nodeData) + this.margin.top + this.margin.bottom + contextMenuHeight;
+        if (this.height >= possibleNewHeight) {
+            // no need of updating the height
+            return;
+        }
+        this.height = possibleNewHeight;
+        d3.select('svg#chartSvgContainer')
+          .transition()
+          .duration(this.duration)
+          .attr('height', this.height);
     }
 
+    private getRawNodeHeights(nodeData: any): number {
+        return this.getMultiplicationFactorForRootNode(nodeData) * this.nodeHeightAfterBeingRendered * 1.5;
+    }
+
+    private getMultiplicationFactorForRootNode(nodeData: any): number {
+        let multiplicationFactor = mockData.children.length;
+        if (this.root.id === nodeData.id && !this.root.children) {
+            // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
+            multiplicationFactor = 0;
+            this.height = 0;
+        }
+        return multiplicationFactor;
+    }
 }
