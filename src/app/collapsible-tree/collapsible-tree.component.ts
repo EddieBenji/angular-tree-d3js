@@ -242,7 +242,7 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     private getMultiplicationFactorForRootNode(nodeData: any): number {
-        let multiplicationFactor = mockData.children ? mockData.children.length : 0;
+        let multiplicationFactor = this.nodes ? this.nodes.length : 0;
         if (this.root.id === nodeData.id && !this.root.children) {
             // then we're changing the root node and we're collapsing it. Therefore, the height should be decreased!
             multiplicationFactor = 0;
@@ -359,7 +359,7 @@ export class CollapsibleTreeComponent implements OnInit {
               container.append('text')
                 .attr('x', - 99999)
                 .attr('y', - 99999)
-                .text(this.getTooltipValue(d.data));
+                .text(this.getTooltipValue(d.data) + '--');
               const size = container.node().getBBox();
               container.remove();
               return size.width * .9; // TODO: need to check if this value is good enough.
@@ -410,7 +410,7 @@ export class CollapsibleTreeComponent implements OnInit {
           // property from this component.
           .style('fill', '#000')
           .text((d: any) => {
-              return `Rule ID: ${d.data.id}`;
+              return `Node ID: ${d.data.id}`;
           });
 
         nodeEnterContextMenu.append('foreignObject')
@@ -424,14 +424,20 @@ export class CollapsibleTreeComponent implements OnInit {
           .append('xhtml').html(({ data }) => {
             const { rulePattern } = data as HierarchyRuleDatum;
             let rulePatterHtml = '';
-            for (const pattern of rulePattern) {
-                rulePatterHtml += `<div data-type="contextMenu" class="menu-sub-content"><span class="pattern-value">${pattern}</span></div>`;
+            if (rulePattern) {
+                // The root node doesn't have the rulePattern, therefore, we won't render anything there.
+                for (const pattern of rulePattern) {
+                    rulePatterHtml += `<div data-type="contextMenu" class="menu-sub-content"><span class="pattern-value">${pattern}</span></div>`;
+                }
             }
-            return '<div class="node-text wordwrap" data-type="contextMenu">'
+            const baseHtml = '<div class="node-text wordwrap" data-type="contextMenu">'
               + '<div class="divider" data-type="contextMenu"></div>'
               // + '<div data-type="contextMenu" class="menu-heading"><b data-type="contextMenu">' + data.id + '</b></div>'
-              + '<div data-type="contextMenu" class="menu-content"><b>Pattern:</b> <span data-type="contextMenu">' + data.pattern + '</span></div>'
-              + '<div data-type="contextMenu" class="menu-sub-content"><b>Rule Pattern</b></div>' + rulePatterHtml;
+              + '<div data-type="contextMenu" class="menu-content"><b>Pattern:</b> <span data-type="contextMenu">' + data.pattern + '</span></div>';
+            if (!rulePatterHtml) {
+                return baseHtml;
+            }
+            return baseHtml + '<div data-type="contextMenu" class="menu-sub-content"><b>Rule Pattern</b></div>' + rulePatterHtml;
         });
 
         const nodeUpdate = nodeEnter.merge(node);
