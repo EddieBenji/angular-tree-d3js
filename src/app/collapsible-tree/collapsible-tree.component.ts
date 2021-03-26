@@ -68,9 +68,9 @@ export class CollapsibleTreeComponent implements OnInit {
 
     ngOnInit(): void {
         this.renderTreeChart();
-        setTimeout(() => {
-            this.hideOtherTooltipsIfAny();
-        }, 500);
+        // setTimeout(() => {
+        //     this.hideOtherTooltipsIfAny();
+        // }, 500);
     }
 
     renderTreeChart(): void {
@@ -127,9 +127,9 @@ export class CollapsibleTreeComponent implements OnInit {
           visibleMenu.node() !== undefined && visibleMenu.node() !== null;
     }
 
-    private closeContextMenu(visibleContextMenu): void {
-        this.height -= (visibleContextMenu.node() as any).getBBox().height;
-        this.updateHeightOfMainSelection();
+    closeContextMenu(visibleContextMenu): void {
+        // this.height -= (visibleContextMenu.node() as any).getBBox().height;
+        // this.updateHeightOfMainSelection();
         visibleContextMenu.classed('context-menu-g-show', false);
     }
 
@@ -184,7 +184,7 @@ export class CollapsibleTreeComponent implements OnInit {
         this.currentLeafNodeSelected = undefined;
     }
 
-    private collapseNode(nodeData): void {
+    collapseNode(nodeData): void {
         if (nodeData.children) {
             nodeData._children = nodeData.children;
             nodeData.children = null;
@@ -195,27 +195,68 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     private updateClickedValueForNode(nodeData): void {
-        const newClickedValue = !nodeData.clicked;
-        if (this.isLeafNode(nodeData)) {
-            if (newClickedValue && this.currentLeafNodeSelected?.clicked) {
-                // Unselect the other nodes as there is a new leaf node selected.
-                this.unselectOtherNodes();
-            }
-            this.currentLeafNodeSelected = nodeData;
-            nodeData.clicked = newClickedValue;
-            // change the color of all the parents as well.
-            this.updateClickedValueOnParents(nodeData.parent);
+        if (!this.isLeafNode(nodeData)) {
+            return;
         }
+        const newClickedValue = !nodeData.clicked;
+        if (newClickedValue && this.currentLeafNodeSelected?.clicked) {
+            // Unselect the other nodes as there is a new leaf node selected.
+            this.unselectOtherNodes();
+        }
+        this.currentLeafNodeSelected = nodeData;
+        nodeData.clicked = newClickedValue;
+        // change the color of all the parents as well.
+        this.updateClickedValueOnParents(nodeData.parent);
     }
 
+    // resetRootPath(d): void {
+    //
+    //     let findRoot = d;
+    //     while (findRoot.parent) {
+    //         findRoot = findRoot.parent;
+    //     }
+    //     this.doResetPath(findRoot);
+    //
+    //     let find = d;
+    //     while (find.parent) {
+    //         find.color = '00BE4F';
+    //         find.strokeWidth = '3';
+    //         find = find.parent;
+    //     }
+    // }
+    //
+    // // Returns a list of all nodes under the root.
+    // // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
+    // doResetPath(d): void {
+    //     if (d.children) {
+    //         d.children.forEach((c): void => {
+    //             this.doResetPath(c);
+    //         });
+    //         d.color = undefined;
+    //         d.strokeWidth = undefined;
+    //     }
+    //     d.color = undefined;
+    //     d.strokeWidth = undefined;
+    // }
+
     click(mouseEvent, nodeData: d3.HierarchyNode<any>): void {
+        // this.resetRootPath(nodeData);
         this.collapseNode(nodeData);
         this.updateClickedValueForNode(nodeData);
         this.verifyAndCloseContextMenuIfAny(); // This is necessary here in order to avoid strange behavior with the vertical bar.
+        // If the node has a parent, then collapse its child nodes except for this clicked node.
+        // if (nodeData.parent) {
+        //     nodeData.parent.children.forEach((element) => {
+        //         if (nodeData.data.name !== element.data.name) {
+        //             this.collapseChildrenByParentNode(element);
+        //         }
+        //     });
+        // }
         this.updateChart(nodeData);
-        setTimeout(() => {
-            this.hideOtherTooltipsIfAny();
-        }, 500);
+        // this.centerNode(nodeData);
+        // setTimeout(() => {
+        //     this.hideOtherTooltipsIfAny();
+        // }, 500);
     }
 
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
@@ -257,6 +298,16 @@ export class CollapsibleTreeComponent implements OnInit {
           .duration(this.duration)
           .attr('height', this.height);
     }
+
+    // centerNode(source): void {
+    //     let x = - source.y0;
+    //     let y = - source.x0;
+    //     x = x + this.width / 2;
+    //     y = y + this.height / 2;
+    //     d3.select('g').transition()
+    //       .duration(this.duration)
+    //       .attr('transform', 'translate(' + x + ',' + y + ')');
+    // }
 
     updateChart(source): void {
         let i = 0;
@@ -307,7 +358,7 @@ export class CollapsibleTreeComponent implements OnInit {
               return 'translate(' + source.y0 + ',' + source.x0 + ')';
           })
           .on('mouseover', this.mouseover.bind(this))
-          .on('mousemove', this.mousemove.bind(this))
+          // .on('mousemove', this.mousemove.bind(this))
           .on('mouseout', this.mouseout.bind(this))
           .on('contextmenu', this.contextmenu.bind(this))
           .on('click', this.click.bind(this));
@@ -541,36 +592,38 @@ export class CollapsibleTreeComponent implements OnInit {
         d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
     }
 
-    mousemove(mouseEvent, d): void {
-        this.hideOtherTooltipsIfAny();
-        d3.select('#nodeInfoID' + d.id).attr('visibility', 'visible');
-        d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
-    }
+    // mousemove(mouseEvent, d): void {
+    //     this.hideOtherTooltipsIfAny();
+    //     d3.select('#nodeInfoID' + d.id).attr('visibility', 'visible');
+    //     d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'visible');
+    // }
 
-    mouseout(): void {
-        d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
-        d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
+    mouseout(mouseEvent, d): void {
+        // d3.selectAll('.tooltip-g rect').attr('visibility', 'hidden');
+        // d3.selectAll('.tooltip-g text').attr('visibility', 'hidden');
+        d3.select('#nodeInfoID' + d.id).attr('visibility', 'hidden');
+        d3.select('#nodeInfoTextID' + d.id).attr('visibility', 'hidden');
     }
 
     contextmenu(mouseEvent, nodeData: any): void {
         mouseEvent.preventDefault();
         const contextMenu = d3.selectAll('.context-menu-g');
+        contextMenu.classed('context-menu-g-show', false);
         contextMenu.transition()
           .duration(this.duration)
           .attr('transform', (d: any): string => {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
 
-        d3.selectAll('.context-menu-g').classed('context-menu-g-show', false);
         d3.select('#nodeContextMenuGroup' + nodeData.id).classed('context-menu-g-show', true);
         // In the context menu, we can show multiple rule patterns, therefore, we should update the height if needed.
-        const contextMenuHeight = nodeData.data.rulePattern?.length > 0 ? nodeData.data.rulePattern.length * 14 + 150 : 150;
-        const possibleNewHeight = this.getRawNodeHeights(nodeData) + this.margin.top + this.margin.bottom + contextMenuHeight;
-        if (this.height >= possibleNewHeight) {
-            // no need of updating the height
-            return;
-        }
-        this.height = possibleNewHeight;
-        this.updateHeightOfMainSelection();
+        // const contextMenuHeight = nodeData.data.rulePattern?.length > 0 ? nodeData.data.rulePattern.length * 14 + 150 : 150;
+        // const possibleNewHeight = this.getRawNodeHeights(nodeData) + this.margin.top + this.margin.bottom + contextMenuHeight;
+        // if (this.height >= possibleNewHeight) {
+        //     // no need of updating the height
+        //     return;
+        // }
+        // this.height = possibleNewHeight;
+        // this.updateHeightOfMainSelection();
     }
 }

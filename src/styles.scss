@@ -3,4 +3,16 @@ body{
   padding-left: 0;
   padding-right: 0;
   max-width: 90%;
+
+  margin: 0 auto;
+  border-radius: 6px;
+  overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  background: white;
+  color: black;
+  font-size: 1.03rem;
+  line-height: 1.5;
+  font-family: system-ui, sans-serif;
+  padding-top: 20px;
 }
