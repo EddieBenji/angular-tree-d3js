@@ -5,4 +5,10 @@
     Node selected from context menu: {{nameFromContextMenu}}
 </h6>
 
-<div class="d3-chart container tree" #chart></div>
+<div *ngIf="isLoadingTree"
+     class="loading-container">
+    <div class="loader">
+    </div>
+</div>
+
+<div class="d3-chart container tree" #chart [ngStyle]="{visibility: !isLoadingTree ? 'visible': 'hidden'}"></div>

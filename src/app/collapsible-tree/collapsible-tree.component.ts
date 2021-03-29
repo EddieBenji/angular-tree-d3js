@@ -51,6 +51,8 @@ export class CollapsibleTreeComponent implements OnInit {
 
     currentLeafNodeSelected: any;
 
+    isLoadingTree = false;
+
     constructor() {
     }
 
@@ -104,7 +106,7 @@ export class CollapsibleTreeComponent implements OnInit {
           .attr('transform', 'translate(' + this.contextMenuPosition.xAxis + ',' + this.contextMenuPosition.yAxis + ')');
 
         // close context menu if clicked outside of it.
-        d3.select('body').on('click.context-menu-g', (a) => {
+        d3.select('body .d3-chart.container.tree').on('click.context-menu-g-show', (a) => {
             this.verifyAndCloseContextMenuIfAny();
         });
 
@@ -241,9 +243,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
     click(mouseEvent, nodeData: d3.HierarchyNode<any>): void {
         // this.resetRootPath(nodeData);
-        this.collapseNode(nodeData);
-        this.updateClickedValueForNode(nodeData);
-        this.verifyAndCloseContextMenuIfAny(); // This is necessary here in order to avoid strange behavior with the vertical bar.
+        this.isLoadingTree = true;
         // If the node has a parent, then collapse its child nodes except for this clicked node.
         // if (nodeData.parent) {
         //     nodeData.parent.children.forEach((element) => {
@@ -252,11 +252,17 @@ export class CollapsibleTreeComponent implements OnInit {
         //         }
         //     });
         // }
-        this.updateChart(nodeData);
+        // this.updateChart(nodeData);
         // this.centerNode(nodeData);
-        // setTimeout(() => {
-        //     this.hideOtherTooltipsIfAny();
-        // }, 500);
+        setTimeout(() => {
+            this.collapseNode(nodeData);
+            this.updateClickedValueForNode(nodeData);
+            this.verifyAndCloseContextMenuIfAny(); // This is necessary here in order to avoid strange behavior with the vertical bar.
+            this.updateChart(nodeData);
+            this.hideOtherTooltipsIfAny();
+
+            this.isLoadingTree = false;
+        });
     }
 
     // https://stackoverflow.com/questions/19423396/d3-js-how-to-make-all-the-nodes-collapsed-in-collapsible-indented-tree
