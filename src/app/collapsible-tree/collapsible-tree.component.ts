@@ -51,7 +51,7 @@ export class CollapsibleTreeComponent implements OnInit {
 
     currentLeafNodeSelected: any;
 
-    isLoadingTree = false;
+    isLoadingTree = true;
 
     constructor() {
     }
@@ -69,7 +69,8 @@ export class CollapsibleTreeComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.renderTreeChart();
+        this.isLoadingTree = true;
+        setTimeout(() => this.renderTreeChart());
         // setTimeout(() => {
         //     this.hideOtherTooltipsIfAny();
         // }, 500);
@@ -117,6 +118,8 @@ export class CollapsibleTreeComponent implements OnInit {
 
         // this.collapseChildrenByParentNode(this.root);
         this.updateChart(this.root);
+        this.isLoadingTree = false;
+        // setTimeout(() => this.isLoadingTree = false);
 
     }
 
@@ -332,8 +335,9 @@ export class CollapsibleTreeComponent implements OnInit {
         this.width = (maxDepth - 1) * 180 + (this.chartContainer.nativeElement.offsetWidth - this.margin.left - this.margin.right);
         const mainSvgSection = d3.select('svg#chartSvgContainer');
 
-        mainSvgSection.transition()
-          .duration(this.duration)
+        mainSvgSection
+          // .transition()
+          // .duration(this.duration)
           .attr('width', this.width)
           .attr('height', this.height);
 
@@ -499,8 +503,9 @@ export class CollapsibleTreeComponent implements OnInit {
 
         const nodeUpdate = nodeEnter.merge(node);
 
-        nodeUpdate.transition()
-          .duration(this.duration)
+        nodeUpdate
+          // .transition()
+          // .duration(this.duration)
           .attr('transform', (d) => {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
@@ -512,35 +517,41 @@ export class CollapsibleTreeComponent implements OnInit {
           .style('fill', this.fillColorForNode.bind(this))
           .attr('cursor', 'pointer');
 
-        const nodeExit = node.exit().transition()
-          .duration(this.duration)
+        const nodeExit = node.exit()
+          // .transition()
+          // .duration(this.duration)
           .attr('transform', (d) => {
               return 'translate(' + source.y + ',' + source.x + ')';
           })
           .remove();
 
         // Transition tooltip to their new position.
-        nodeEnterTooltip.transition()
-          // nodesTooltip.transition()
+        nodeEnterTooltip
+          .transition()
           .duration(this.duration)
           .attr('transform', (d: any) => {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
 
         // Transition context to their new position.
-        nodeEnterContextMenu.transition()
+        nodeEnterContextMenu
+          .transition()
           .duration(this.duration)
           .attr('transform', (d: any) => {
               return 'translate(' + d.y + ',' + d.x + ')';
           });
 
-        nodeEnterTooltip.exit().transition().duration(this.duration)
+        nodeEnterTooltip.exit()
+          .transition()
+          .duration(this.duration)
           .attr('transform', (d: any) => {
               return 'translate(' + source.y + ',' + source.x + ')';
           })
           .remove();
 
-        nodeEnterContextMenu.exit().transition().duration(this.duration)
+        nodeEnterContextMenu.exit()
+          .transition()
+          .duration(this.duration)
           .attr('transform', (d: any) => {
               return 'translate(' + source.y + ',' + source.x + ')';
           })
@@ -567,12 +578,14 @@ export class CollapsibleTreeComponent implements OnInit {
 
         const linkUpdate = linkEnter.merge(link);
 
-        linkUpdate.transition()
-          .duration(this.duration)
+        linkUpdate
+          // .transition()
+          // .duration(this.duration)
           .attr('d', (d) => diagonal(d, d.parent));
 
-        const linkExit = link.exit().transition()
-          .duration(this.duration)
+        const linkExit = link.exit()
+          // .transition()
+          // .duration(this.duration)
           .attr('d', (d) => {
               const o = { x: source.x, y: source.y };
               return diagonal(o, o);
@@ -615,7 +628,8 @@ export class CollapsibleTreeComponent implements OnInit {
         mouseEvent.preventDefault();
         const contextMenu = d3.selectAll('.context-menu-g');
         contextMenu.classed('context-menu-g-show', false);
-        contextMenu.transition()
+        contextMenu
+          .transition()
           .duration(this.duration)
           .attr('transform', (d: any): string => {
               return 'translate(' + d.y + ',' + d.x + ')';
